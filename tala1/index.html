@@ -107,13 +107,16 @@ textarea:focus{outline:4px solid #ff9d6b66;border-color:#2f5fa0}
 .crd{font-size:clamp(15px,1.9vw,19px);margin-top:8px}
 .crd span+span::before{content:"";position:absolute;inset-inline-end:calc(100% + 11px);top:20%;bottom:20%;width:2px;background:#b9d3ea;border-radius:2px}
 }
+.top{display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;margin:0 0 6px}
+.top .ksu{margin:0!important;height:clamp(44px,12vw,66px)!important;width:auto!important}
+.daypill{margin:0;background:#fffbf1;border:3px solid #f1e2bd;border-radius:999px;padding:8px 18px;color:var(--navy);font-weight:900;font-size:clamp(13px,3.4vw,19px);white-space:nowrap;box-shadow:0 4px 12px #0e2a5a1f}
 </style>
 </head>
 <body>
 <div id="bgfix" aria-hidden="true"></div>
 <main class="app">
   <header class="hero">
-    <img id="ksu" class="ksu" alt="شعار جامعة الملك سعود" width="150" height="59">
+    <div class="top"><img id="ksu" class="ksu" alt="شعار جامعة الملك سعود" width="150" height="59"><p class="daypill">اليوم العالمي للطفل · ٢٠ نوفمبر</p></div>
     <h1>عجلة عالم الطفل</h1>
     <p class="subpill">لفّة صغيرة… وفهم أكبر لعالم الطفل</p>
   </header>
@@ -127,7 +130,7 @@ textarea:focus{outline:4px solid #ff9d6b66;border-color:#2f5fa0}
   <p class="hint" id="hint">اضغطي «دوّري العجلة» وشوفي وش تطلع لك</p>
   <div class="dots" id="dots" aria-label="الأقسام التي جرّبتِها"></div>
 
-  <footer class="foot"><p class="day">اليوم العالمي للطفل · ٢٠ نوفمبر</p><div class="crd"><span>إعداد: <b>تالا سلطان الشهري</b></span><span>إشراف: <b>د. إسراء سعد دويحي</b></span></div></footer>
+  <footer class="foot"><div class="crd"><span>إعداد: <b>تالا سلطان الشهري</b></span><span>إشراف: <b>د. إسراء سعد دويحي</b></span></div></footer>
 </main>
 
 <div id="sheetWrap" class="sheet-wrap" hidden>
