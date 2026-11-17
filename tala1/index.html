@@ -119,6 +119,11 @@ textarea:focus{outline:4px solid #ff9d6b66;border-color:#2f5fa0}
 .hero .subpill{grid-area:sub;justify-self:center;margin-top:8px}
 .wheel-wrap{width:min(100%,max(460px,calc(100dvh - 290px)),860px)}
 }
+@media (orientation:landscape) and (min-width:700px){
+#bgfix::before,#bgfix::after{content:"";position:absolute;left:0;right:0;height:19vw;background:var(--bg) no-repeat;background-size:100% auto}
+#bgfix::before{top:0;background-position:center top}
+#bgfix::after{bottom:0;background-position:center bottom}
+}
 </style>
 </head>
 <body>
