@@ -519,16 +519,19 @@ function Board(cv, mode, model, opts) {
   cv.addEventListener('pointerdown', this._d); cv.addEventListener('pointermove', this._m);
   cv.addEventListener('pointerup', this._u); cv.addEventListener('pointercancel', this._u);
   cv.addEventListener('contextmenu', function (e) { e.preventDefault(); });
+  cv.addEventListener('touchmove', function (e) { e.preventDefault(); }, { passive: false });
+  cv.addEventListener('touchstart', function (e) { e.preventDefault(); }, { passive: false });
   this.fit();
 }
 Board.prototype.fit = function () {
-  var r = this.cv.getBoundingClientRect(), d = Math.min(window.devicePixelRatio || 1, 2.5);
-  var w = Math.round(r.width * d), h = Math.round(r.height * d);
+  var d = Math.min(window.devicePixelRatio || 1, 2.5);
+  var w = Math.round(this.cv.clientWidth * d), h = Math.round(this.cv.clientHeight * d);
   if (w > 0 && (this.cv.width !== w || this.cv.height !== h)) { this.cv.width = w; this.cv.height = h; }
   this.render();
 };
 Board.prototype.render = function () { paintModel(this.cv.getContext('2d'), this.mode, this.m, this.cv.width, this.cv.height, this.sel); };
-Board.prototype.pt = function (e) { var r = this.cv.getBoundingClientRect(); return [clamp((e.clientX - r.left) / r.width, 0, 1), clamp((e.clientY - r.top) / r.height, 0, 1)]; };
+Board.prototype.measure = function () { var r = this.cv.getBoundingClientRect(); this.rc = { l: r.left + this.cv.clientLeft, t: r.top + this.cv.clientTop, w: this.cv.clientWidth || r.width, h: this.cv.clientHeight || r.height }; };
+Board.prototype.pt = function (e) { var r = this.rc || (this.measure(), this.rc); return [clamp((e.clientX - r.l) / r.w, 0, 1), clamp((e.clientY - r.t) / r.h, 0, 1)]; };
 Board.prototype.hit = function (p) {
   var W = this.cv.width, H = this.cv.height;
   for (var i = this.m.items.length - 1; i >= 0; i--) {
@@ -543,7 +546,7 @@ Board.prototype.down = function (e) {
   if (e.pointerType === 'mouse' && e.button > 0) return;
   e.preventDefault();
   try { this.cv.setPointerCapture(e.pointerId); } catch (x) { }
-  var p = this.pt(e);
+  this.measure(); var p = this.pt(e);
   if (this.mode === 'draw' && this.tool !== 'move') {
     this.cur = { t: 's', c: this.color, w: this.size, e: this.tool === 'eraser', p: [p] };
     if (this.tool === 'eraser') this.cur.w = this.size * 2.2;
