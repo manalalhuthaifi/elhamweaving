@@ -109,7 +109,7 @@ textarea:focus{outline:4px solid #ff9d6b66;border-color:#2f5fa0}
 }
 .top{display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;margin:0 0 6px}
 .top .ksu{margin:0!important;height:clamp(44px,12vw,66px)!important;width:auto!important}
-.daypill{margin:0;background:#fffbf1;border:3px solid #f1e2bd;border-radius:999px;padding:8px 18px;color:var(--navy);font-weight:900;font-size:clamp(13px,3.4vw,19px);white-space:nowrap;box-shadow:0 4px 12px #0e2a5a1f}
+.daypill{margin:0;background:#fffbf1;border:3px solid #f1e2bd;border-radius:999px;padding:4px 12px;border-width:2px;color:var(--navy);font-weight:800;font-size:clamp(11px,2.9vw,14px);white-space:nowrap;box-shadow:0 4px 12px #0e2a5a1f}
 @media (min-width:1000px){
 .hero{display:grid;grid-template-columns:1fr auto 1fr;grid-template-areas:"logo title pill" "sub sub sub";align-items:center;column-gap:20px}
 .top{display:contents}
@@ -133,10 +133,9 @@ textarea:focus{outline:4px solid #ff9d6b66;border-color:#2f5fa0}
   <section class="wheel-wrap" aria-label="عجلة عالم الطفل">
     <svg id="wheel" viewBox="0 0 600 600" role="img" aria-label="عجلة من ثمانية أقسام"></svg>
     <div id="labels" class="labels" aria-hidden="true"></div>
-    <button id="spin" class="spin-btn" type="button" aria-label="دوّري العجلة"><span>دوّري</span><span>العجلة</span></button>
+    <button id="spin" class="spin-btn" type="button" aria-label="دوّري العجلة"><span>اضغطي</span></button>
   </section>
 
-  <p class="hint" id="hint">اضغطي «دوّري العجلة» وشوفي وش تطلع لك</p>
   <div class="dots" id="dots" aria-label="الأقسام التي جرّبتِها"></div>
 
   <footer class="foot"><div class="crd"><span>إعداد: <b>تالا سلطان الشهري</b></span><span>إشراف: <b>د. إسراء سعد دويحي</b></span></div></footer>
@@ -343,7 +342,7 @@ draw();
 /* نقاط الأقسام */
 var dotsEl=$('#dots');CATS.forEach(function(){dotsEl.appendChild(h('i'))});
 function markVisited(i){visited[i]=true;var d=dotsEl.children;for(var k=0;k<d.length;k++)d[k].className=visited[k]?'on':'';
-  var n=Object.keys(visited).length;$('#hint').textContent=n>=N?'جرّبتِ كل الأقسام! دوّري مرة أخرى متى حبّيتِ.':'جرّبتِ '+AR(n)+' من '+AR(N)+' أقسام — دوّري مرة أخرى'}
+  var n=Object.keys(visited).length;var h=$('#hint');if(h)h.textContent=n>=N?'جرّبتِ كل الأقسام! دوّري مرة أخرى متى حبّيتِ.':'جرّبتِ '+AR(n)+' من '+AR(N)+' أقسام — دوّري مرة أخرى'}
 
 var reduce=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 var lastIdx=-1;
