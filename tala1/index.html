@@ -110,6 +110,15 @@ textarea:focus{outline:4px solid #ff9d6b66;border-color:#2f5fa0}
 .top{display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;margin:0 0 6px}
 .top .ksu{margin:0!important;height:clamp(44px,12vw,66px)!important;width:auto!important}
 .daypill{margin:0;background:#fffbf1;border:3px solid #f1e2bd;border-radius:999px;padding:8px 18px;color:var(--navy);font-weight:900;font-size:clamp(13px,3.4vw,19px);white-space:nowrap;box-shadow:0 4px 12px #0e2a5a1f}
+@media (min-width:1000px){
+.hero{display:grid;grid-template-columns:1fr auto 1fr;grid-template-areas:"logo title pill" "sub sub sub";align-items:center;column-gap:20px}
+.top{display:contents}
+.hero .ksu{grid-area:logo;justify-self:start;height:70px!important}
+.daypill{grid-area:pill;justify-self:end}
+.hero h1{grid-area:title;margin:0;font-size:clamp(40px,4.8vw,66px)}
+.hero .subpill{grid-area:sub;justify-self:center;margin-top:8px}
+.wheel-wrap{width:min(100%,max(460px,calc(100dvh - 290px)),860px)}
+}
 </style>
 </head>
 <body>
