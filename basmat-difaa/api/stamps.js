@@ -22,7 +22,8 @@ module.exports = async (req, res) => {
     const s = await read();
     if (b.add) {
       const n = clean(b.add.n);
-      if (n && s.names.length < MAXN) {
+      const nz = x => String(x).replace(/[\u064B-\u065F\u0640]/g, '').replace(/[أإآ]/g, 'ا').replace(/ى/g, 'ي').replace(/ة/g, 'ه').replace(/\s+/g, ' ').trim();
+      if (n && s.names.length < MAXN && !s.names.some(x => nz(x.n) === nz(n))) {
         s.names.push({ n, t: +b.add.t || Date.now(), p: String(b.add.p || '').slice(0, 30), m: Number.isInteger(b.add.m) ? b.add.m : 0 });
         s.target = Math.max(s.target, s.names.length, 2);
       }

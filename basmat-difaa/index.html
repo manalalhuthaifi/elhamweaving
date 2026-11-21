@@ -570,10 +570,16 @@ function addStamp(){
   const name = clean(input.value);
   if(!name){ toast('اكتبي اسم المعلمة أولًا', 'warn'); input.focus(); return; }
   if(state.names.length >= MAXN){ toast('اكتملت اللوحة: الحد الأقصى ' + toAr(MAXN) + ' بصمة', 'warn'); return; }
+  const isAdmin = document.body.classList.contains('admin');
+  const norm = x => String(x).replace(/[\u064B-\u065F\u0640]/g,'').replace(/[أإآ]/g,'ا').replace(/ى/g,'ي').replace(/ة/g,'ه').replace(/\s+/g,' ').trim();
+  let mine = null; try{ mine = localStorage.getItem('basmat-mine'); }catch(e){}
+  if(!isAdmin && mine){ toast('سجّلتِ بصمتكِ مسبقًا، لكل معلمة بصمة واحدة', 'warn'); input.value = ''; return; }
+  if(!isAdmin && state.names.some(x => norm(x.n) === norm(name))){ toast('هذا الاسم مسجّل مسبقًا، لكل معلمة بصمة واحدة', 'warn'); return; }
   state.phrase = $('phraseSel').value;
   const m = (state.names.length ? (state.names[state.names.length-1].m + 1 + Math.floor(Math.random() * (THANKS.length - 1))) : Math.floor(Math.random() * THANKS.length)) % THANKS.length;
   state.names.push({ n: name, t: Date.now(), p: state.phrase, m });
   if(state.names.length > state.target) state.target = state.names.length;
+  if(!isAdmin){ try{ localStorage.setItem('basmat-mine', name); }catch(e){} }
   save(); push({ add: state.names[state.names.length-1] }); relayout(); updateUI();
   startAnim(state.names.length - 1);
   input.value = '';
