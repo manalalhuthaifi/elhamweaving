@@ -1,16 +1,16 @@
-const { put, list } = require('@vercel/blob');
+const { put, get } = require('@vercel/blob');
 const KEY = 'basmat-difaa/stamps.json', MAXN = 120;
 const clean = s => String(s || '').replace(/[\u0000-\u001F\u007F]/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 50);
 const fresh = () => ({ target: 20, phrase: '', names: [] });
 async function read() {
-  const { blobs } = await list({ prefix: KEY, limit: 1 });
-  if (!blobs.length) return fresh();
-  const r = await fetch(blobs[0].url + '?t=' + Date.now(), { cache: 'no-store' });
-  const o = await r.json();
+  let r;
+  try { r = await get(KEY, { access: 'private' }); } catch (e) { return fresh(); }
+  if (!r || r.statusCode !== 200) return fresh();
+  const o = JSON.parse(await new Response(r.stream).text());
   return { target: +o.target || 20, phrase: String(o.phrase || ''), names: Array.isArray(o.names) ? o.names : [] };
 }
 async function write(s) {
-  await put(KEY, JSON.stringify(s), { access: 'public', addRandomSuffix: false, allowOverwrite: true, contentType: 'application/json', cacheControlMaxAge: 0 });
+  await put(KEY, JSON.stringify(s), { access: 'private', addRandomSuffix: false, allowOverwrite: true, contentType: 'application/json' });
 }
 module.exports = async (req, res) => {
   res.setHeader('Cache-Control', 'no-store');
