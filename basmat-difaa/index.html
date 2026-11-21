@@ -117,6 +117,13 @@ details.settings summary:focus-visible{outline:3px solid var(--gold);outline-off
 #card .cnum{margin-top:10px;font-size:13px;color:var(--muted)}
 #card .cclose{margin-top:14px}
 
+
+/* بطاقة الشكر داخل لوحة الإدخال: لا تغطي اللوحة */
+#controls #thanks{position:static;inset:auto;width:100%;max-width:560px;margin:0 auto;display:none;opacity:1;transform:none;padding:10px 16px 8px;box-shadow:0 4px 14px rgba(60,40,10,.18)}
+#controls #thanks.show{display:block;animation:thIn .35s ease both}
+#controls #thanks .t1{font-size:21px}#controls #thanks .t2{font-size:16px;line-height:1.7}
+@keyframes thIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+body.present #thanks{position:fixed}
 /* ===== وضع العرض ===== */
 #exitPresent{position:fixed;top:14px;inset-inline-start:14px;z-index:30;opacity:0;pointer-events:none;
   background:rgba(255,255,255,.94);transition:opacity .25s ease}
@@ -158,6 +165,7 @@ body.present #thanks{bottom:28px}
 </main>
 
 <section id="controls" aria-label="أدوات المشاركة">
+  <div id="thanks" role="status" aria-live="polite"><div class="t1" id="thT1"></div><div class="t2" id="thT2"></div><div class="t3">أُضيفت بصمتكِ إلى اللوحة</div></div>
   <form id="stampForm" autocomplete="off">
     <div class="field">
       <label for="nameInput">اسم المعلمة</label>
@@ -197,7 +205,6 @@ body.present #thanks{bottom:28px}
 
 <button type="button" class="btn small" id="exitPresent">خروج من وضع العرض</button>
 <div id="toast" role="status" aria-live="polite"></div>
-<div id="thanks" role="status" aria-live="polite"><div class="t1" id="thT1"></div><div class="t2" id="thT2"></div><div class="t3">أُضيفت بصمتكِ إلى اللوحة</div></div>
 <div id="cardBack"><div id="card" role="dialog" aria-modal="true" aria-labelledby="cName">
   <img class="cfp" id="cFp" alt="" src="">
   <div class="cname" id="cName"></div><div class="cphrase" id="cPhrase"></div>
@@ -582,14 +589,15 @@ function hitStamp(ev){
 function setZoom(z){
   zoom = Math.max(1, Math.min(4, z)); sizeBoard(); updateUI();
 }
+function dockThanks(){ const th = $('thanks'); (present ? document.body : $('controls')).insertBefore(th, present ? null : $('controls').firstChild); updateToastPos(); }
 function enterPresent(){
-  present = true; document.body.classList.add('present');
+  present = true; dockThanks(); document.body.classList.add('present');
   const el = document.documentElement;
   try{ const p = el.requestFullscreen && el.requestFullscreen(); if(p && p.catch) p.catch(() => {}); }catch(e){}
   queueSize(); showExit();
 }
 function exitPresent(){
-  present = false; document.body.classList.remove('present');
+  present = false; document.body.classList.remove('present'); dockThanks();
   try{ if(document.fullscreenElement && document.exitFullscreen) document.exitFullscreen(); }catch(e){}
   $('exitPresent').classList.remove('show'); queueSize();
 }
