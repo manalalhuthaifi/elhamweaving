@@ -482,7 +482,7 @@ function buildGlow(){
   const im = x.getImageData(0, 0, W, H), d = im.data;
   for(let y = 0; y < H; y++) for(let xx = 0; xx < W; xx++){
     const i = (y*W + xx) * 4, r = d[i], g = d[i+1], b = d[i+2];
-    const on = y > 372 && y < 756 && xx > 585 && xx < 1085 && g > r + 40 && g > b + 20 && r < 90;
+    const on = y > 326 && y < 708 && xx > 585 && xx < 1085 && g > r + 40 && g > b + 20 && r < 90;
     d[i] = 255; d[i+1] = 214; d[i+2] = 96; d[i+3] = on ? 255 : 0;
   }
   x.putImageData(im, 0, 0);
