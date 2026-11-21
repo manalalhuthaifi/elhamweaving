@@ -356,10 +356,7 @@ function edgeAt(arr, y){
   let i = Math.round(y) - FR.y0; if(i < 0) i = 0; if(i > arr.length-1) i = arr.length-1; return arr[i];
 }
 function fitsSide(side, cx, cy, h){
-  return fitsRot(side, cx, cy, h, TILT) && fitsRot(side, cx, cy, h, -TILT);
-}
-function fitsRot(side, cx, cy, h, rot){
-  const a = EA*h, b = EB*h, s = Math.sin(rot), c = Math.cos(rot);
+  const a = EA*h, b = EB*h, rot = (side === 'L' ? 1 : -1) * TILT, s = Math.sin(rot), c = Math.cos(rot);
   for(let i = 0; i < 48; i++){
     const t = i/48 * 2*Math.PI, px = a*Math.cos(t), py = b*Math.sin(t);
     const x = cx + px*c - py*s, y = cy + px*s + py*c;
@@ -387,52 +384,45 @@ function rowFit(side, h, r, k){
     return { cy, near: hi, far, ex };
   }
 }
-const PAIR_D = .9;   // نصف المسافة بين بصمتي القلب (بنسبة نصف العرض)
-function sideRows(side, h, r, P){
+function sideRows(side, h, r, cols){
   const rows = [];
   for(let k = 0; k < r; k++){
     const f = rowFit(side, h, r, k); if(!f) return null;
-    const lo = f.near + PAIR_D*f.ex, hi = f.far - PAIR_D*f.ex, span = side === 'L' ? lo - hi : hi - lo;
-    if(side === 'L' ? f.far > f.near : f.far < f.near) return null;
-    const room = Math.abs(f.far - f.near) - 2*PAIR_D*f.ex;
-    if(room < 0) return null;
-    if(P > 1 && room < (P-1)*(4*PAIR_D*f.ex/PAIR_D*0.95 + 3)) return null;
+    if(cols > 1 && Math.abs(f.far - f.near) < (cols-1) * (2*f.ex + 3)) return null;
     rows.push(f);
   }
   return rows;
 }
 function computeLayout(N){
-  const pairs = Math.ceil(N/2), pR = Math.ceil(pairs/2), pL = Math.floor(pairs/2);
+  const nR = Math.ceil(N/2), nL = Math.floor(N/2);
   let best = null;
   for(let r = 1; r <= 12; r++){
-    const P = Math.ceil(pR / r);
-    const ok = h => sideRows('R', h, r, P) && (pL === 0 || sideRows('L', h, r, P));
+    const cols = Math.ceil(nR / r);
+    const ok = h => sideRows('R', h, r, cols) && (nL === 0 || sideRows('L', h, r, cols));
     if(!ok(10)) continue;
     let lo = 10, hi = HMAX;
     if(ok(hi)) lo = hi; else for(let i = 0; i < 24; i++){ const m = (lo+hi)/2; if(ok(m)) lo = m; else hi = m; }
-    if(!best || lo > best.h * 1.04) best = { r, P, h: lo };
+    if(!best || lo > best.h * 1.04) best = { r, cols, h: lo };
   }
-  if(!best) best = { r: 12, P: Math.ceil(pR/12), h: 10 };
-  const h = Math.max(8, Math.floor(best.h * .97 * 2) / 2), r = best.r, P = best.P;
+  if(!best) best = { r: 12, cols: Math.ceil(nR/12), h: 10 };
+  const h = Math.max(8, Math.floor(best.h * .97 * 2) / 2), r = best.r, cols = best.cols;
   const w = h * AR;
   const build = side => {
-    const rows = sideRows(side, h, r, P) || sideRows(side, 10, r, P) || [];
+    const rows = sideRows(side, h, r, cols) || sideRows(side, 10, r, cols) || [];
     const seq = [];
-    for(let c = 0; c < P; c++) for(let k = 0; k < r; k++){
+    for(let c = 0; c < cols; c++) for(let k = 0; k < r; k++){
       const f = rows[k]; if(!f) continue;
-      const d = PAIR_D * f.ex, a = f.near + (side === 'L' ? -d : d), b2 = f.far + (side === 'L' ? d : -d);
-      const cx = P > 1 ? a + (b2 - a) * c / (P - 1) : (a + b2) / 2;
-      // العضو الأول (الأيمن) ثم الثاني (الأيسر): الرأسان متباعدان والقاعدتان متقاربتان => قلب
-      seq.push([{ x: cx + d, y: f.cy, h, w, rot: TILT, side }, { x: cx - d, y: f.cy, h, w, rot: -TILT, side }]);
+      const x = cols > 1 ? f.near + (f.far - f.near) * c / (cols - 1) : (f.near + f.far) / 2;
+      seq.push({ x, y: f.cy, h, w, rot: (side === 'L' ? 1 : -1) * TILT, side });
     }
     return seq;
   };
   const sr = build('R'), sl = build('L'), slots = [];
   for(let i = 0; i < N; i++){
-    const p = i >> 1, m = i & 1, arr = (p % 2 === 0) ? sr : sl, g = arr[p >> 1];
-    if(g && g[m]) slots.push(g[m]);
+    const s = (i % 2 === 0) ? sr[i/2] : sl[(i-1)/2];
+    if(s) slots.push(s);
   }
-  return { N, r, cols: P, h, w, slots };
+  return { N, r, cols, h, w, slots };
 }
 function relayout(){
   const N = Math.max(state.target, state.names.length, 2);
