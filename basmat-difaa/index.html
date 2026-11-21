@@ -293,6 +293,28 @@ function save(){
   try{ localStorage.setItem(STORE, JSON.stringify({ v:2, target:state.target, phrase:state.phrase, names:state.names })); storageOK = true; }
   catch(e){ if(storageOK){ toast('تعذّر حفظ البصمات في هذا المتصفح (قد يكون الوضع الخاص مفعّلًا)', 'warn'); } storageOK = false; }
 }
+/* ---------- المزامنة المشتركة (تعمل عند توفر التخزين، وإلا يبقى الحفظ محليًا) ---------- */
+let remoteOK = false, syncing = false;
+function adopt(o){
+  if(!o || !Array.isArray(o.names)) return;
+  const sig = JSON.stringify(o.names) + o.target;
+  if(sig === adopt.last) return; adopt.last = sig;
+  state.names = o.names.slice(0, MAXN).map(x => ({ n: clean(x.n), t: +x.t || 0, p: x.p || '', m: Number.isInteger(x.m) ? x.m % THANKS.length : 0 }));
+  state.target = Math.max(2, state.names.length, parseInt(o.target) || 20);
+  try{ localStorage.setItem(STORE, JSON.stringify({ v:2, target:state.target, phrase:state.phrase, names:state.names })); }catch(e){}
+  relayout(); updateUI(); redraw();
+}
+async function pull(){
+  if(syncing) return;
+  try{ const r = await fetch('/api/stamps', { cache:'no-store' }); if(!r.ok) return; remoteOK = true; adopt(await r.json()); }catch(e){}
+}
+async function push(body){
+  if(!remoteOK) return;
+  syncing = true;
+  try{ const r = await fetch('/api/stamps', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body) }); if(r.ok){ const o = await r.json(); adopt.last = ''; syncing = false; adopt(o); } }catch(e){}
+  syncing = false;
+}
+const pushAll = () => push({ set:{ names:state.names, target:state.target, phrase:state.phrase } });
 function clean(s){ return String(s).replace(/[\u0000-\u001F\u007F]/g,' ').replace(/\s+/g,' ').trim().slice(0, 50); }
 const toAr = n => String(n).replace(/\d/g, d => '٠١٢٣٤٥٦٧٨٩'[d]);
 
@@ -555,7 +577,7 @@ function addStamp(){
   const m = (state.names.length ? (state.names[state.names.length-1].m + 1 + Math.floor(Math.random() * (THANKS.length - 1))) : Math.floor(Math.random() * THANKS.length)) % THANKS.length;
   state.names.push({ n: name, t: Date.now(), p: state.phrase, m });
   if(state.names.length > state.target) state.target = state.names.length;
-  save(); relayout(); updateUI();
+  save(); push({ add: state.names[state.names.length-1] }); relayout(); updateUI();
   startAnim(state.names.length - 1);
   input.value = '';
   showThanks(state.names[state.names.length - 1], 450);
@@ -662,18 +684,18 @@ function bind(){
   $('pngBtn').addEventListener('click', exportPNG);
   $('undoBtn').addEventListener('click', () => {
     if(!state.names.length) return;
-    state.names.pop(); anim = null; save(); relayout(); updateUI(); redraw(); toast('تم التراجع عن آخر بصمة');
+    state.names.pop(); anim = null; save(); pushAll(); relayout(); updateUI(); redraw(); toast('تم التراجع عن آخر بصمة');
   });
   $('clearBtn').addEventListener('click', () => {
     if(!state.names.length) return;
     if(confirm('سيتم حذف جميع البصمات من اللوحة. هل تريدين المتابعة؟')){
-      state.names = []; anim = null; save(); relayout(); updateUI(); redraw(); toast('تم مسح اللوحة');
+      state.names = []; anim = null; save(); pushAll(); relayout(); updateUI(); redraw(); toast('تم مسح اللوحة');
     }
   });
   $('targetInput').addEventListener('change', e => {
     let v = parseInt(e.target.value); if(!isFinite(v)) v = state.target;
     v = Math.max(2, state.names.length, Math.min(MAXN, v));
-    state.target = v; save(); relayout(); updateUI(); redraw();
+    state.target = v; save(); pushAll(); relayout(); updateUI(); redraw();
   });
   viewport.addEventListener('keydown', e => {
     if(e.key === '+' || e.key === '=') { setZoom(zoom * 1.25); e.preventDefault(); }
@@ -700,7 +722,7 @@ async function boot(){
       document.fonts.load('700 18px CairoBoard', 'ضعي بصمتكِ'), document.fonts.load('700 18px CairoBoard', 'Ab 12')
     ]);
   }catch(e){}
-  buildGlow(); initMeasure(); load(); relayout(); initPhrases(); bind(); updateUI(); sizeBoard();
+  buildGlow(); initMeasure(); load(); relayout(); initPhrases(); bind(); updateUI(); sizeBoard(); pull(); setInterval(pull, 15000);
   window.__board = { state, get layout(){ return LAYOUT; }, fitName, draw, W, H, FR, get bg(){ return bg; }, get canvas(){ return canvas; }, exportPNG };
   document.documentElement.dataset.ready = '1';
   input.focus({ preventScroll:true });
