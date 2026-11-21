@@ -130,10 +130,7 @@ body.admin details.settings{display:block}
 
 /* الاسم داخل البصمة */
 #card .cstamp{position:relative;width:min(230px,62vw);margin:-84px auto 14px;transform:rotate(-8deg);filter:drop-shadow(0 6px 8px rgba(120,0,0,.35))}
-#card .cstamp .cfp{width:100%;margin:0;transform:none;filter:none}
-#card .cvoid{position:absolute;left:19.9%;width:59.3%;top:42.8%;height:16%;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;overflow:hidden;line-height:1.15}
-#card .cvoid .cname{font-size:22px;line-height:1.15;color:var(--green);word-break:break-word}
-#card .cvoid .cphrase{margin:2px 0 0;padding:0;background:none;border-radius:0;color:var(--red);font-size:10px;line-height:1.1}
+#card .cstamp canvas{display:block;width:100%;height:auto}
 /* ===== وضع العرض ===== */
 #exitPresent{position:fixed;top:14px;inset-inline-start:14px;z-index:30;opacity:0;pointer-events:none;
   background:rgba(255,255,255,.94);transition:opacity .25s ease}
@@ -216,7 +213,7 @@ body.present #thanks{bottom:28px}
 <button type="button" class="btn small" id="exitPresent">خروج من وضع العرض</button>
 <div id="toast" role="status" aria-live="polite"></div>
 <div id="cardBack"><div id="card" role="dialog" aria-modal="true" aria-labelledby="cName">
-  <div class="cstamp"><img class="cfp" id="cFp" alt="" src=""><div class="cvoid"><div class="cname" id="cName"></div><div class="cphrase" id="cPhrase"></div></div></div>
+  <div class="cstamp"><canvas id="cCanvas" aria-hidden="true"></canvas><span class="sr-only" id="cName"></span></div>
   <div class="cmsg" id="cMsg"></div><div class="cnum" id="cNum"></div>
   <button type="button" class="btn cclose" id="cClose">إغلاق</button>
 </div></div>
@@ -597,19 +594,30 @@ function showThanks(entry, delay){
     thanksTimer = setTimeout(() => $('thanks').classList.remove('show'), 5200);
   }, delay || 0);
 }
+function drawCard(e){
+  const cv = $('cCanvas'), h = 520, w = Math.round(h * AR), dpr = Math.min(3, Math.max(1, window.devicePixelRatio || 1));
+  cv.width = Math.round(w*dpr); cv.height = Math.round(h*dpr);
+  const c = cv.getContext('2d'); c.scale(dpr, dpr);
+  c.drawImage(fp, 0, 0, w, h);
+  const f = fitName(e.n, h, e.p || ''), cx = VOID.cx*w, cy = VOID.cy*h;
+  const lh = f.fs*1.2, plh = f.phrase ? f.pfs*1.2 : 0, total = f.lines.length*lh + plh;
+  c.textAlign = 'center'; c.textBaseline = 'middle'; c.direction = 'rtl'; c.lineJoin = 'round';
+  c.font = '800 ' + f.fs + 'px ' + FONT;
+  f.lines.forEach((ln, j) => { const y = cy - total/2 + (j+.5)*lh + f.fs*.04;
+    c.lineWidth = Math.max(1, f.fs*.26); c.strokeStyle = 'rgba(255,255,255,.93)'; c.strokeText(ln, cx, y); c.fillStyle = NAME_COLOR; c.fillText(ln, cx, y); });
+  if(f.phrase){ const y = cy - total/2 + f.lines.length*lh + plh/2 + f.pfs*.04;
+    c.font = '800 ' + f.pfs + 'px ' + FONT; c.lineWidth = Math.max(1, f.pfs*.26);
+    c.strokeStyle = 'rgba(255,255,255,.93)'; c.strokeText(f.phrase, cx, y); c.fillStyle = PHRASE_COLOR; c.fillText(f.phrase, cx, y); }
+}
 let cardFocus = null;
 function openCard(i){
   const e = state.names[i]; if(!e) return;
   cardFocus = document.activeElement;
-  $('cFp').src = ASSETS.fp; $('cName').textContent = e.n;
-  const p = $('cPhrase'); p.textContent = e.p || ''; p.style.display = e.p ? '' : 'none';
+  $('cName').textContent = e.n + (e.p ? ' — ' + e.p : ''); drawCard(e);
   $('cMsg').textContent = THANKS[e.m % THANKS.length];
   $('cNum').textContent = 'البصمة رقم ' + toAr(i + 1) + ' من ' + toAr(state.names.length);
   $('thanks').classList.remove('show');
   $('cardBack').classList.add('show');
-  { const n = $('cName'), v = n.parentElement; let fs = 22; n.style.fontSize = fs + 'px';
-    const room = () => v.scrollHeight <= v.clientHeight + 1 && n.scrollWidth <= v.clientWidth + 1;
-    while(fs > 9 && !room()){ fs -= 1; n.style.fontSize = fs + 'px'; } }
   $('cClose').focus();
 }
 function closeCard(){
