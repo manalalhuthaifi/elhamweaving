@@ -105,6 +105,19 @@ details.settings summary:focus-visible{outline:3px solid var(--gold);outline-off
 #thanks .t1 em{font-style:normal;color:var(--red)}
 #thanks .t2{font-size:17px;color:var(--ink);line-height:1.8;margin-top:2px;font-weight:600}
 #thanks .t3{font-size:13px;color:var(--muted);margin-top:6px;font-weight:700}
+#padBack{position:fixed;inset:0;z-index:45;background:rgba(10,30,16,.82);display:none;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:18px;text-align:center;color:#fff;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+#padBack.show{display:flex}
+#padBack img{width:min(180px,40vw);filter:drop-shadow(0 6px 14px rgba(0,0,0,.4));animation:padPulse 1.4s ease-in-out infinite}
+@keyframes padPulse{0%,100%{transform:scale(1);opacity:.85}50%{transform:scale(1.07);opacity:1}}
+#padBack b{font-size:clamp(20px,4.5vw,30px);line-height:1.5}
+#padBack span{font-size:clamp(15px,3.4vw,19px);opacity:.9}
+#padBack button{margin-top:10px;background:transparent;border:1px solid rgba(255,255,255,.6);color:#fff;border-radius:999px;padding:8px 22px;font:inherit;cursor:pointer}
+#padBack .ink{position:absolute;width:130px;margin:-65px 0 0 -65px;pointer-events:none;animation:inkIn .45s cubic-bezier(.2,.9,.3,1.2) both}
+@keyframes inkIn{from{transform:scale(1.8);opacity:0}to{transform:scale(1);opacity:1}}
+#padBack .rip{position:absolute;width:20px;height:20px;margin:-10px 0 0 -10px;border:3px solid #ff5a5a;border-radius:50%;pointer-events:none;animation:ripOut .7s ease-out both}
+@keyframes ripOut{to{transform:scale(9);opacity:0}}
+#padBack.done>*:not(.ink):not(.rip){opacity:0;transition:opacity .25s}
+@media (prefers-reduced-motion:reduce){#padBack img{animation:none}#padBack .ink,#padBack .rip{animation:none}}
 #cardBack{position:fixed;inset:0;z-index:40;background:rgba(10,30,16,.55);display:none;align-items:center;justify-content:center;padding:18px;backdrop-filter:blur(2px)}
 #cardBack.show{display:flex}
 #card{width:min(94vw,460px);background:linear-gradient(180deg,#fffdf6,#fbf1dc);border:3px solid var(--gold);border-radius:24px;padding:26px 24px 20px;text-align:center;
@@ -212,6 +225,7 @@ body.present #thanks{bottom:28px}
 
 <button type="button" class="btn small" id="exitPresent">خروج من وضع العرض</button>
 <div id="toast" role="status" aria-live="polite"></div>
+<div id="padBack" role="dialog" aria-modal="true" aria-label="تأكيد البصمة"><img id="padFp" alt=""><b id="padName"></b><span>اضغطي على الشاشة لتضعي بصمتكِ</span><button type="button" id="padCancel">إلغاء</button></div>
 <div id="cardBack"><div id="card" role="dialog" aria-modal="true" aria-labelledby="cName">
   <div class="cstamp"><canvas id="cCanvas" aria-hidden="true"></canvas><span class="sr-only" id="cName"></span></div>
   <div class="cmsg" id="cMsg"></div><div class="cnum" id="cNum"></div>
@@ -575,6 +589,24 @@ function addStamp(){
   let mine = null; try{ mine = localStorage.getItem('basmat-mine'); }catch(e){}
   if(!isAdmin && mine){ toast('سجّلتِ بصمتكِ مسبقًا، لكل معلمة بصمة واحدة', 'warn'); input.value = ''; return; }
   if(!isAdmin && state.names.some(x => norm(x.n) === norm(name))){ toast('هذا الاسم مسجّل مسبقًا، لكل معلمة بصمة واحدة', 'warn'); return; }
+  padName = name; $('padName').textContent = name; $('padFp').src = ASSETS.fp; $('padBack').classList.add('show'); $('padBack').tabIndex = 0; $('padBack').focus(); return;
+}
+let padName = '', padBusy = false;
+function padTap(ev){
+  if(padBusy || ev.target.id === 'padCancel') return;
+  padBusy = true;
+  const pb = $('padBack'), x = ev.clientX || innerWidth/2, y = ev.clientY || innerHeight/2;
+  pb.classList.add('done');
+  const r = document.createElement('div'); r.className = 'rip'; r.style.left = x + 'px'; r.style.top = y + 'px'; pb.appendChild(r);
+  const k = document.createElement('img'); k.className = 'ink'; k.src = ASSETS.fp; k.alt = ''; k.style.left = x + 'px'; k.style.top = y + 'px'; k.style.transform = 'rotate(-8deg)'; pb.appendChild(k);
+  try{ navigator.vibrate && navigator.vibrate(30); }catch(e){}
+  setTimeout(() => { pb.querySelectorAll('.ink,.rip').forEach(n => n.remove()); pb.classList.remove('done'); padBusy = false; finishStamp(); }, 1000);
+}
+function finishStamp(){
+  $('padBack').classList.remove('show');
+  const name = padName; if(!name) return;
+  const isAdmin = document.body.classList.contains('admin');
+  if(state.names.length >= MAXN) return;
   state.phrase = $('phraseSel').value;
   const m = (state.names.length ? (state.names[state.names.length-1].m + 1 + Math.floor(Math.random() * (THANKS.length - 1))) : Math.floor(Math.random() * THANKS.length)) % THANKS.length;
   state.names.push({ n: name, t: Date.now(), p: state.phrase, m });
@@ -689,6 +721,9 @@ function bind(){
   $('cardBack').addEventListener('click', e => { if(e.target === $('cardBack')) closeCard(); });
   $('cClose').addEventListener('click', closeCard);
   $('thanks').addEventListener('click', () => $('thanks').classList.remove('show'));
+  $('padBack').addEventListener('pointerdown', padTap);
+  $('padBack').addEventListener('keydown', e => { if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); padTap({ target:{}, clientX:innerWidth/2, clientY:innerHeight/2 }); } });
+  $('padCancel').addEventListener('click', e => { e.stopPropagation(); $('padBack').classList.remove('show'); padName = ''; input.focus(); });
   $('stampForm').addEventListener('submit', e => { e.preventDefault(); addStamp(); });
   $('zoomIn').addEventListener('click', () => setZoom(zoom * 1.25));
   $('zoomOut').addEventListener('click', () => setZoom(zoom / 1.25));
@@ -716,7 +751,7 @@ function bind(){
     else if(e.key === '-') { setZoom(zoom / 1.25); e.preventDefault(); }
     else if(e.key === '0') { setZoom(1); e.preventDefault(); }
   });
-  document.addEventListener('keydown', e => { if(e.key === 'Escape'){ if($('cardBack').classList.contains('show')) closeCard(); else if(present) exitPresent(); } });
+  document.addEventListener('keydown', e => { if(e.key === 'Escape'){ if($('padBack').classList.contains('show') && !padBusy){ $('padBack').classList.remove('show'); padName = ''; } else if($('cardBack').classList.contains('show')) closeCard(); else if(present) exitPresent(); } });
   document.addEventListener('fullscreenchange', () => { if(!document.fullscreenElement && present) exitPresent(); });
   ['mousemove','pointerdown','touchstart'].forEach(ev => document.addEventListener(ev, showExit, { passive:true }));
   window.addEventListener('resize', queueSize);
