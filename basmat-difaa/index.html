@@ -105,7 +105,7 @@ details.settings summary:focus-visible{outline:3px solid var(--gold);outline-off
 #thanks .t1 em{font-style:normal;color:var(--red)}
 #thanks .t2{font-size:17px;color:var(--ink);line-height:1.8;margin-top:2px;font-weight:600}
 #thanks .t3{font-size:13px;color:var(--muted);margin-top:6px;font-weight:700}
-#padBack{position:fixed;inset:0;z-index:45;background:rgba(10,30,16,.82);display:none;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:18px;text-align:center;color:#fff;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+#padBack{user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;position:fixed;inset:0;z-index:45;background:rgba(10,30,16,.82);display:none;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:18px;text-align:center;color:#fff;cursor:pointer;touch-action:none;-webkit-tap-highlight-color:transparent}
 #padBack.show{display:flex}
 #padBack img{width:min(180px,40vw);filter:drop-shadow(0 6px 14px rgba(0,0,0,.4));animation:padPulse 1.4s ease-in-out infinite}
 @keyframes padPulse{0%,100%{transform:scale(1);opacity:.85}50%{transform:scale(1.07);opacity:1}}
@@ -117,7 +117,23 @@ details.settings summary:focus-visible{outline:3px solid var(--gold);outline-off
 #padBack .rip{position:absolute;width:20px;height:20px;margin:-10px 0 0 -10px;border:3px solid #ff5a5a;border-radius:50%;pointer-events:none;animation:ripOut .7s ease-out both}
 @keyframes ripOut{to{transform:scale(9);opacity:0}}
 #padBack.done>*:not(.ink):not(.rip){opacity:0;transition:opacity .25s}
-@media (prefers-reduced-motion:reduce){#padBack img{animation:none}#padBack .ink,#padBack .rip{animation:none}}
+#padBack .hold{position:absolute;width:170px;height:170px;margin:-85px 0 0 -85px;pointer-events:none}
+#padBack .hold .fpw{position:absolute;inset:20px;display:flex;justify-content:center}
+#padBack .hold .fpw img{height:100%;width:auto;animation:none;filter:none}
+#padBack .hold .fpw .base{opacity:.25;filter:grayscale(1) brightness(2)}
+#padBack .hold .fpw .fill{position:absolute;left:50%;top:0;transform:translateX(-50%);clip-path:inset(100% 0 0 0)}
+#padBack .hold svg{position:absolute;inset:0;transform:rotate(-90deg)}
+#padBack .hold circle{fill:none;stroke-width:6;stroke-linecap:round}
+#padBack .hold .trk{stroke:rgba(255,255,255,.25)}
+#padBack .hold .prg{stroke:#ff6b6b;stroke-dasharray:471;stroke-dashoffset:471}
+#padBack .hold.ok{animation:slam .35s cubic-bezier(.2,.9,.3,1.3) both}
+@keyframes slam{0%{transform:scale(1.5)}60%{transform:scale(.88)}100%{transform:scale(1)}}
+#padBack .dot{position:absolute;width:10px;height:10px;margin:-5px;border-radius:50%;background:#e01b2f;pointer-events:none;animation:dotOut .7s ease-out both}
+@keyframes dotOut{to{transform:translate(var(--dx),var(--dy)) scale(.2);opacity:0}}
+#padBack.shake{animation:shk .3s}
+@keyframes shk{20%{transform:translate(-5px,3px)}40%{transform:translate(5px,-3px)}60%{transform:translate(-3px,-2px)}80%{transform:translate(3px,2px)}}
+#padBack .hint{opacity:0;transition:opacity .2s}#padBack .hint.show{opacity:1}
+@media (prefers-reduced-motion:reduce){#padBack img{animation:none}#padBack .ink,#padBack .rip,#padBack .dot,#padBack.shake,#padBack .hold.ok{animation:none}}
 #cardBack{position:fixed;inset:0;z-index:40;background:rgba(10,30,16,.55);display:none;align-items:center;justify-content:center;padding:18px;backdrop-filter:blur(2px)}
 #cardBack.show{display:flex}
 #card{width:min(94vw,460px);background:linear-gradient(180deg,#fffdf6,#fbf1dc);border:3px solid var(--gold);border-radius:24px;padding:26px 24px 20px;text-align:center;
@@ -225,7 +241,7 @@ body.present #thanks{bottom:28px}
 
 <button type="button" class="btn small" id="exitPresent">خروج من وضع العرض</button>
 <div id="toast" role="status" aria-live="polite"></div>
-<div id="padBack" role="dialog" aria-modal="true" aria-label="تأكيد البصمة"><img id="padFp" alt=""><b id="padName"></b><span>اضغطي على الشاشة لتضعي بصمتكِ</span><button type="button" id="padCancel">إلغاء</button></div>
+<div id="padBack" role="dialog" aria-modal="true" aria-label="تأكيد البصمة"><img id="padFp" alt=""><b id="padName"></b><span id="padTxt">المسي الشاشة واستمري بالضغط لتنطبع بصمتكِ</span><button type="button" id="padCancel">إلغاء</button></div>
 <div id="cardBack"><div id="card" role="dialog" aria-modal="true" aria-labelledby="cName">
   <div class="cstamp"><canvas id="cCanvas" aria-hidden="true"></canvas><span class="sr-only" id="cName"></span></div>
   <div class="cmsg" id="cMsg"></div><div class="cnum" id="cNum"></div>
@@ -591,16 +607,44 @@ function addStamp(){
   if(!isAdmin && state.names.some(x => norm(x.n) === norm(name))){ toast('هذا الاسم مسجّل مسبقًا، لكل معلمة بصمة واحدة', 'warn'); return; }
   padName = name; $('padName').textContent = name; $('padFp').src = ASSETS.fp; $('padBack').classList.add('show'); $('padBack').tabIndex = 0; $('padBack').focus(); return;
 }
-let padName = '', padBusy = false;
-function padTap(ev){
-  if(padBusy || ev.target.id === 'padCancel') return;
-  padBusy = true;
+let padName = '', padBusy = false, hold = null;
+const HOLD_MS = 1300;
+function padStart(ev){
+  if(padBusy || hold || ev.target.id === 'padCancel') return;
   const pb = $('padBack'), x = ev.clientX || innerWidth/2, y = ev.clientY || innerHeight/2;
-  pb.classList.add('done');
-  const r = document.createElement('div'); r.className = 'rip'; r.style.left = x + 'px'; r.style.top = y + 'px'; pb.appendChild(r);
-  const k = document.createElement('img'); k.className = 'ink'; k.src = ASSETS.fp; k.alt = ''; k.style.left = x + 'px'; k.style.top = y + 'px'; k.style.transform = 'rotate(-8deg)'; pb.appendChild(k);
-  try{ navigator.vibrate && navigator.vibrate(30); }catch(e){}
-  setTimeout(() => { pb.querySelectorAll('.ink,.rip').forEach(n => n.remove()); pb.classList.remove('done'); padBusy = false; finishStamp(); }, 1000);
+  const el = document.createElement('div'); el.className = 'hold'; el.style.left = x + 'px'; el.style.top = y + 'px';
+  el.innerHTML = '<svg viewBox="0 0 170 170"><circle class="trk" cx="85" cy="85" r="75"/><circle class="prg" cx="85" cy="85" r="75"/></svg><div class="fpw"><img class="base" alt=""><img class="fill" alt=""></div>';
+  el.querySelectorAll('img').forEach(i => i.src = ASSETS.fp);
+  pb.appendChild(el);
+  hold = { el, t0: performance.now(), id: ev.pointerId, x, y, raf: 0, vib: 0, prg: el.querySelector('.prg'), fill: el.querySelector('.fill') };
+  $('padTxt').textContent = 'استمري بالضغط…';
+  const tick = now => {
+    if(!hold) return;
+    const t = Math.min(1, (now - hold.t0) / HOLD_MS);
+    hold.prg.style.strokeDashoffset = 471 * (1 - t);
+    hold.fill.style.clipPath = 'inset(' + (100 - t*100) + '% 0 0 0)';
+    if(t >= .25*(hold.vib+1) && hold.vib < 3){ hold.vib++; try{ navigator.vibrate && navigator.vibrate(12 + hold.vib*6); }catch(e){} }
+    if(t >= 1) return padDone();
+    hold.raf = requestAnimationFrame(tick);
+  };
+  hold.raf = requestAnimationFrame(tick);
+}
+function padMove(ev){ if(hold && !padBusy){ hold.x = ev.clientX; hold.y = ev.clientY; hold.el.style.left = hold.x + 'px'; hold.el.style.top = hold.y + 'px'; } }
+function padRelease(){
+  if(!hold || padBusy) return;
+  cancelAnimationFrame(hold.raf); hold.el.remove(); hold = null;
+  $('padTxt').textContent = 'ما اكتملت.. المسي الشاشة واستمري بالضغط';
+}
+function padDone(){
+  const pb = $('padBack'), h = hold; padBusy = true; hold = null;
+  h.el.classList.add('ok'); pb.classList.add('shake');
+  try{ navigator.vibrate && navigator.vibrate([40, 30, 60]); }catch(e){}
+  for(let i = 0; i < 14; i++){
+    const d = document.createElement('div'); d.className = 'dot'; d.style.left = h.x + 'px'; d.style.top = h.y + 'px';
+    const an = Math.random()*Math.PI*2, r = 70 + Math.random()*90; d.style.setProperty('--dx', Math.cos(an)*r + 'px'); d.style.setProperty('--dy', Math.sin(an)*r + 'px'); pb.appendChild(d);
+  }
+  $('padTxt').textContent = 'تمت بصمتكِ!';
+  setTimeout(() => { pb.querySelectorAll('.hold,.dot').forEach(n => n.remove()); pb.classList.remove('shake'); padBusy = false; $('padTxt').textContent = 'المسي الشاشة واستمري بالضغط لتنطبع بصمتكِ'; finishStamp(); }, 900);
 }
 function finishStamp(){
   $('padBack').classList.remove('show');
@@ -721,8 +765,11 @@ function bind(){
   $('cardBack').addEventListener('click', e => { if(e.target === $('cardBack')) closeCard(); });
   $('cClose').addEventListener('click', closeCard);
   $('thanks').addEventListener('click', () => $('thanks').classList.remove('show'));
-  $('padBack').addEventListener('pointerdown', padTap);
-  $('padBack').addEventListener('keydown', e => { if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); padTap({ target:{}, clientX:innerWidth/2, clientY:innerHeight/2 }); } });
+  $('padBack').addEventListener('pointerdown', padStart);
+  addEventListener('pointermove', padMove);
+  ['pointerup','pointercancel'].forEach(e => addEventListener(e, padRelease));
+  $('padBack').addEventListener('contextmenu', e => e.preventDefault());
+  $('padBack').addEventListener('keydown', e => { if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); if(!hold && !padBusy){ padStart({ target:{}, clientX:innerWidth/2, clientY:innerHeight/2 }); setTimeout(padRelease, 0 + HOLD_MS + 50); } } });
   $('padCancel').addEventListener('click', e => { e.stopPropagation(); $('padBack').classList.remove('show'); padName = ''; input.focus(); });
   $('stampForm').addEventListener('submit', e => { e.preventDefault(); addStamp(); });
   $('zoomIn').addEventListener('click', () => setZoom(zoom * 1.25));
