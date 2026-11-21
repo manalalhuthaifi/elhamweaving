@@ -124,6 +124,9 @@ details.settings summary:focus-visible{outline:3px solid var(--gold);outline-off
 #controls #thanks .t1{font-size:21px}#controls #thanks .t2{font-size:16px;line-height:1.7}
 @keyframes thIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
 body.present #thanks{position:fixed}
+/* الإعدادات للمشرفة فقط */
+details.settings{display:none}
+body.admin details.settings{display:block}
 /* ===== وضع العرض ===== */
 #exitPresent{position:fixed;top:14px;inset-inline-start:14px;z-index:30;opacity:0;pointer-events:none;
   background:rgba(255,255,255,.94);transition:opacity .25s ease}
@@ -227,6 +230,12 @@ const MAP_R=[804, 804, 804, 804, 805, 807, 809, 811, 813, 815, 816, 898, 906, 90
 (() => {
 'use strict';
 const $ = id => document.getElementById(id);
+try{
+  const q = location.search + location.hash;
+  if(/admin=0/.test(q)) localStorage.removeItem('basmat-admin');
+  else if(/admin/.test(q)) localStorage.setItem('basmat-admin','1');
+  if(localStorage.getItem('basmat-admin') === '1') document.body.classList.add('admin');
+}catch(e){ if(/admin/.test(location.search + location.hash)) document.body.classList.add('admin'); }
 const canvas = $('board'), wrap = $('boardWrap'), viewport = $('viewport');
 const input = $('nameInput'), toastEl = $('toast');
 
