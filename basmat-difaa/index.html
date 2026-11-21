@@ -241,7 +241,7 @@ body.present #thanks{bottom:28px}
 
 <button type="button" class="btn small" id="exitPresent">خروج من وضع العرض</button>
 <div id="toast" role="status" aria-live="polite"></div>
-<div id="padBack" role="dialog" aria-modal="true" aria-label="تأكيد البصمة"><img id="padFp" alt=""><b id="padName"></b><span id="padTxt">المسي الشاشة واستمري بالضغط لتنطبع بصمتكِ</span><button type="button" id="padCancel">إلغاء</button></div>
+<div id="padBack" role="dialog" aria-modal="true" aria-label="تأكيد البصمة"><img id="padFp" alt=""><b id="padName"></b><span id="padTxt">المسي الشاشة لتنطبع بصمتكِ</span><button type="button" id="padCancel">إلغاء</button></div>
 <div id="cardBack"><div id="card" role="dialog" aria-modal="true" aria-labelledby="cName">
   <div class="cstamp"><canvas id="cCanvas" aria-hidden="true"></canvas><span class="sr-only" id="cName"></span></div>
   <div class="cmsg" id="cMsg"></div><div class="cnum" id="cNum"></div>
@@ -615,28 +615,14 @@ function padStart(ev){
   if(padBusy || hold || ev.target.id === 'padCancel') return;
   const pb = $('padBack'), x = ev.clientX || innerWidth/2, y = ev.clientY || innerHeight/2;
   const el = document.createElement('div'); el.className = 'hold'; el.style.left = x + 'px'; el.style.top = y + 'px';
-  el.innerHTML = '<svg viewBox="0 0 170 170"><circle class="trk" cx="85" cy="85" r="75"/><circle class="prg" cx="85" cy="85" r="75"/></svg><div class="fpw"><img class="base" alt=""><img class="fill" alt=""></div>';
-  el.querySelectorAll('img').forEach(i => i.src = ASSETS.fp);
+  el.innerHTML = '<svg viewBox="0 0 170 170"><circle class="trk" cx="85" cy="85" r="75"/><circle class="prg" cx="85" cy="85" r="75" style="stroke-dashoffset:0"/></svg><div class="fpw"><img class="fill" alt="" style="clip-path:none"></div>';
+  el.querySelector('img').src = ASSETS.fp;
   pb.appendChild(el);
-  hold = { el, t0: performance.now(), id: ev.pointerId, x, y, raf: 0, vib: 0, prg: el.querySelector('.prg'), fill: el.querySelector('.fill') };
-  $('padTxt').textContent = 'استمري بالضغط…';
-  const tick = now => {
-    if(!hold) return;
-    const t = Math.min(1, (now - hold.t0) / HOLD_MS);
-    hold.prg.style.strokeDashoffset = 471 * (1 - t);
-    hold.fill.style.clipPath = 'inset(' + (100 - t*100) + '% 0 0 0)';
-    if(t >= .25*(hold.vib+1) && hold.vib < 3){ hold.vib++; try{ navigator.vibrate && navigator.vibrate(12 + hold.vib*6); }catch(e){} }
-    if(t >= 1) return padDone();
-    hold.raf = requestAnimationFrame(tick);
-  };
-  hold.raf = requestAnimationFrame(tick);
+  hold = { el, x, y };
+  padDone();
 }
-function padMove(ev){ if(hold && !padBusy){ hold.x = ev.clientX; hold.y = ev.clientY; hold.el.style.left = hold.x + 'px'; hold.el.style.top = hold.y + 'px'; } }
-function padRelease(){
-  if(!hold || padBusy) return;
-  cancelAnimationFrame(hold.raf); hold.el.remove(); hold = null;
-  $('padTxt').textContent = 'ما اكتملت.. المسي الشاشة واستمري بالضغط';
-}
+function padMove(){}
+function padRelease(){}
 function padDone(){
   const pb = $('padBack'), h = hold; padBusy = true; hold = null;
   h.el.classList.add('ok'); pb.classList.add('shake');
@@ -646,7 +632,7 @@ function padDone(){
     const an = Math.random()*Math.PI*2, r = 70 + Math.random()*90; d.style.setProperty('--dx', Math.cos(an)*r + 'px'); d.style.setProperty('--dy', Math.sin(an)*r + 'px'); pb.appendChild(d);
   }
   $('padTxt').textContent = 'تمت بصمتكِ!';
-  setTimeout(() => { pb.querySelectorAll('.hold,.dot').forEach(n => n.remove()); pb.classList.remove('shake'); padBusy = false; $('padTxt').textContent = 'المسي الشاشة واستمري بالضغط لتنطبع بصمتكِ'; finishStamp(); }, 900);
+  setTimeout(() => { pb.querySelectorAll('.hold,.dot').forEach(n => n.remove()); pb.classList.remove('shake'); padBusy = false; $('padTxt').textContent = 'المسي الشاشة لتنطبع بصمتكِ'; finishStamp(); }, 900);
 }
 function finishStamp(){
   $('padBack').classList.remove('show');
