@@ -356,7 +356,7 @@ function edgeAt(arr, y){
   let i = Math.round(y) - FR.y0; if(i < 0) i = 0; if(i > arr.length-1) i = arr.length-1; return arr[i];
 }
 function fitsSide(side, cx, cy, h){
-  const a = EA*h, b = EB*h, rot = (side === 'L' ? 1 : -1) * TILT, s = Math.sin(rot), c = Math.cos(rot);
+  const a = EA*h, b = EB*h, rot = TILT, s = Math.sin(rot), c = Math.cos(rot);
   for(let i = 0; i < 48; i++){
     const t = i/48 * 2*Math.PI, px = a*Math.cos(t), py = b*Math.sin(t);
     const x = cx + px*c - py*s, y = cy + px*s + py*c;
@@ -413,7 +413,7 @@ function computeLayout(N){
     for(let c = 0; c < cols; c++) for(let k = 0; k < r; k++){
       const f = rows[k]; if(!f) continue;
       const x = cols > 1 ? f.near + (f.far - f.near) * c / (cols - 1) : (f.near + f.far) / 2;
-      seq.push({ x, y: f.cy, h, w, rot: (side === 'L' ? 1 : -1) * TILT, side });
+      seq.push({ x, y: f.cy, h, w, rot: TILT, side });
     }
     return seq;
   };
