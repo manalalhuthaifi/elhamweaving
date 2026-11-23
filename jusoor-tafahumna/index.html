@@ -166,7 +166,10 @@ html.calm .screen.enter, html.calm .rise{animation:none!important}
 .pcard.xl{width:min(300px,70vw);margin:0 auto}
 .pcard.xl img{height:min(340px,48vh)}
 .pcard.xl .pl{font-size:2rem}
-.pmbig{margin:10px 0}
+.pmbig{position:sticky;top:0;z-index:15;margin:8px 0;padding:8px;background:rgba(253,247,240,.97);border:2px solid var(--lav2);border-radius:16px;box-shadow:0 6px 16px rgba(74,29,124,.15)}
+.pmbig .pcard.xl{width:min(150px,38vw)}
+.pmbig .pcard.xl img{height:min(170px,22vh)}
+.pmbig .pcard.xl .pl{font-size:1.5rem}
 .pmfull{position:fixed;inset:0;z-index:9999;background:#fdf7f0;overflow:auto;padding:70px 16px 30px}
 .pmfull .pmexit{position:fixed;top:12px;left:12px}
 .pmfull .pmwords{gap:34px 44px}
@@ -994,7 +997,7 @@ function buildContactOut(){
   function showAt(i){
     cards.forEach((o,k)=>o.e.classList.toggle("on",k===i));
     idx=i;big.textContent="";
-    if(i>=0&&cards[i]){big.hidden=false;big.append(pmCard(cards[i].c,"xl"));cards[i].e.scrollIntoView({block:"nearest"})}
+    if(i>=0&&cards[i]){big.hidden=false;const tp=document.querySelector(".top");big.style.top=((tp?tp.offsetHeight:0)+6)+"px";big.append(pmCard(cards[i].c,"xl"));cards[i].e.scrollIntoView({block:"center"})}
   }
   function tick(){if(idx+1>=cards.length){stop();return}showAt(idx+1)}
   const playBtn=h("button",{class:"btn",type:"button",onclick:()=>{
