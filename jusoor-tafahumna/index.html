@@ -63,6 +63,7 @@ label.row{min-height:44px}
 .card{background:var(--paper);border:2px solid var(--lav2);border-radius:var(--r);padding:16px;box-shadow:var(--shadow)}
 
 /* screens */
+*{animation:none!important;transition:none!important;scroll-behavior:auto!important}
 .screen{padding:18px 0 28px;animation:none}
 .screen.enter{animation:enter .35s ease both}
 html.calm .screen.enter, html.calm .rise{animation:none!important}
@@ -316,8 +317,8 @@ const S={
 };
 if(!Array.isArray(S.done)||S.done.length!==5)S.done=[false,false,false,false,false];
 function save(){store.set("done",JSON.stringify(S.done));store.set("awarded",JSON.stringify(S.awarded));store.set("prefs",JSON.stringify(S.prefs))}
-const reduced=()=>S.prefs.calm||matchMedia("(prefers-reduced-motion: reduce)").matches;
-function applyPrefs(){document.documentElement.classList.toggle("calm",!!S.prefs.calm);document.documentElement.classList.toggle("big",!!S.prefs.big)}
+const reduced=()=>true;
+function applyPrefs(){document.documentElement.classList.add("calm");document.documentElement.classList.toggle("big",!!S.prefs.big)}
 applyPrefs();
 
 /* ---------- toast ---------- */
@@ -390,14 +391,10 @@ let timers=[];function stopAllTimers(){timers.forEach(clearTimeout);timers=[];if
 const EXP={neutral:"01-neutral",happy:"02-happy",laughing:"03-laughing",confident:"04-confident",curious:"05-curious",surprised:"06-surprised",shocked:"07-shocked",thoughtful:"08-thoughtful",concerned:"09-concerned",sad:"10-sad",proud:"11-proud",closed:"12-eyes-closed"};
 const MOUTH_SEQ=["03-slight-open","04-open-a","02-closed-mbp","05-open-e","03-slight-open","07-round-o","06-wide-i","02-closed-mbp","03-slight-open","01-rest"];
 function makeAvatar(exp){
-  const i=h("img",{src:A["exp-"+EXP[exp]],alt:"ليان",draggable:"false"});
+  // وجه ثابت: لا تتغير التعابير ولا يتحرك الفم
+  const i=h("img",{src:A["exp-"+EXP.neutral],alt:"ليان",draggable:"false"});
   const box=h("div",{class:"avatar"},i);
-  box.set=(e,speak)=>{
-    i.src=A["exp-"+EXP[e]];
-    if(speak&&S.prefs.mouth&&!reduced()){ // تحريك تقريبي اختياري، لا علاقة له بصوت
-      let k=0;const run=()=>{if(k>=MOUTH_SEQ.length){i.src=A["exp-"+EXP[e]];return}i.src=A["mouth-"+MOUTH_SEQ[k++]];timers.push(setTimeout(run,170))};run();
-    }
-  };
+  box.set=()=>{};
   return box;
 }
 function expAlt(e){return {neutral:"ليان بتعبير هادئ",happy:"ليان مبتسمة",curious:"ليان بتعبير فضولي",thoughtful:"ليان تفكر",concerned:"ليان بتعبير قلق لطيف",proud:"ليان فخورة",confident:"ليان واثقة",laughing:"ليان تضحك"}[e]||"ليان"}
@@ -451,8 +448,7 @@ function buildIntro(){
     h("p",{class:"rise d2"},"مبادرة «كلنا نقدر» — معهد الرياض النموذجي المتوسط"),
     hello,
     h("div",{class:"row rise d3",style:"justify-content:center"},
-      h("button",{class:"btn gold",id:"startBtn",onclick:()=>go("sMap")},"ابدئي الرحلة"),
-      h("button",{class:"btn alt",id:"calmBtn","aria-pressed":S.prefs.calm,onclick:e=>{S.prefs.calm=!S.prefs.calm;save();applyPrefs();e.currentTarget.setAttribute("aria-pressed",S.prefs.calm);e.currentTarget.textContent=S.prefs.calm?"الحركة متوقفة":"إيقاف الحركة"}},S.prefs.calm?"الحركة متوقفة":"إيقاف الحركة")),
+      h("button",{class:"btn gold",id:"startBtn",onclick:()=>go("sMap")},"ابدئي الرحلة")),
     ...(!storageOK?[h("p",{class:"count"},"تعذّر حفظ التقدم في هذا المتصفح؛ سيستمر عملك خلال هذه الزيارة فقط.")]:[])
   );
 }
@@ -974,7 +970,7 @@ function fillCert(){const i=$("#certIn");if(i&&!i.value&&sharedName){i.value=sha
 /* ---------- settings ---------- */
 function openSettings(){
   const mk=(label,key,after)=>h("label",{class:"row",style:"margin:8px 0"},h("input",{type:"checkbox",checked:!!S.prefs[key],onchange:e=>{S.prefs[key]=e.target.checked;save();applyPrefs();after&&after()}}),label);
-  openModal("الإعدادات",[h("h3",null,"إعدادات العرض"),mk("إيقاف الحركة","calm"),mk("نص أكبر","big"),mk("تجربة حركة الفم (تقريبية)","mouth"),
+  openModal("الإعدادات",[h("h3",null,"إعدادات العرض"),mk("نص أكبر","big"),
     h("p",{class:"count"},storageOK?"التقدم والإعدادات محفوظة على هذا المتصفح.":"تعذّر الحفظ في هذا المتصفح؛ سيستمر العمل خلال هذه الزيارة فقط."),
     h("div",{class:"row"},h("button",{class:"btn alt",onclick:()=>{if(confirm("هل تريدين مسح التقدم والبدء من جديد؟")){S.done=[false,false,false,false,false];S.awarded={};save();store.del("msgs");location.hash="sIntro";location.reload()}}},"مسح التقدم"),
     h("button",{class:"btn","data-first":"",onclick:()=>closeModal()},"إغلاق"))]);
