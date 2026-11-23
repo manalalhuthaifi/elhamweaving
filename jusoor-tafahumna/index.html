@@ -153,6 +153,17 @@ html.calm .screen.enter, html.calm .rise{animation:none!important}
 .word{max-width:100%;background:#fff;border:2px dashed var(--lav3);border-radius:18px;padding:8px}
 .word .wl{font-weight:800;text-align:center;margin-bottom:4px}
 .letters{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
+.wchips{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin:8px 0}
+.chip{border:2px solid var(--lav2);background:#fff;border-radius:999px;padding:8px 16px;min-height:44px;font:inherit;font-weight:700;color:var(--plum);cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--plum);color:#fff;border-color:var(--plum)}
+.fwords{display:flex;flex-wrap:wrap;gap:18px 28px;justify-content:center;margin:12px 0}
+.frow{display:flex;gap:6px;flex-wrap:wrap;justify-content:center;direction:rtl}
+.fh{width:clamp(58px,17vw,96px);text-align:center;border:2px solid transparent;border-radius:14px;padding:4px;background:#fff;transition:transform .2s,border-color .2s}
+.fh img{width:100%;height:clamp(66px,19vw,108px);object-fit:contain;display:block}
+.fh .fl{display:block;font-weight:800;color:var(--plum);font-size:1.1rem}
+.fh.on{border-color:var(--gold);background:var(--gold2);transform:scale(1.12)}
+.fh .fx{display:block;font-size:2rem;height:clamp(66px,19vw,108px);line-height:clamp(66px,19vw,108px)}
+html.calm .fh{transition:none}
 .lc{width:clamp(120px,42vw,260px);border:3px solid transparent;border-radius:12px;padding:2px;text-align:center}
 .lc .t{aspect-ratio:720/900;border-radius:10px;overflow:hidden;background:#fff}
 .lc img{width:100%;height:100%;object-fit:contain}
@@ -629,6 +640,39 @@ function nameTool(modes,opts={}){
 }
 function buildNameSign(){return nameTool(["sign"])}
 
+const WORDS=["سلام","شكرا","حب","أمل","لطف","فرح","نور","وطن","مدرسة","معلمة","صديقة","تعاون","احترام","ابتسامة","أنا أقدر"];
+function buildWords(){
+  const box=h("div");
+  const sel=h("div",{class:"wchips",role:"group","aria-label":"اختاري كلمة"});
+  const stage=h("div",{class:"wstage","aria-live":"polite"});
+  let cur=null,timer=null;
+  const stop=()=>{clearInterval(timer);timer=null;stage.querySelectorAll(".fh").forEach(e=>e.classList.remove("on"))};
+  function show(w,btn){
+    stop();cur=w;[...sel.children].forEach(b=>b.setAttribute("aria-pressed",b===btn));
+    stage.textContent="";
+    const words=certWords(w);
+    const row=h("div",{class:"fwords"});const hands=[];
+    words.forEach(wd=>{
+      const r=h("div",{class:"frow"});
+      wd.forEach(ch=>{
+        const e=h("div",{class:"fh"},HD[ch]?h("img",{src:HD[ch],alt:"إشارة الحرف "+ch,draggable:"false"}):h("span",{class:"fx"},ch),h("span",{class:"fl"},ch));
+        r.append(e);if(HD[ch])hands.push(e);
+      });
+      row.append(r);
+    });
+    const play=h("button",{class:"btn",type:"button",onclick:()=>{
+      stop();let i=0;
+      const step=()=>{hands.forEach((e,k)=>e.classList.toggle("on",k===i));i++;if(i>hands.length){stop()}};
+      step();timer=setInterval(step,900)}},"شغّلي التهجئة");
+    stage.append(h("h3",{style:"text-align:center"},w),row,h("div",{class:"row",style:"justify-content:center"},play),
+      h("p",{class:"count"},"هذه تهجئة بالأصابع: تُشار الكلمة حرفًا حرفًا بحسب جدول الأبجدية الإشارية المعتمد، من اليمين إلى اليسار."));
+  }
+  WORDS.forEach(w=>{const b=h("button",{class:"chip",type:"button","aria-pressed":"false",onclick:()=>show(w,b)},w);sel.append(b)});
+  box.append(h("p",null,"اختاري كلمة لتري كيف تُهجّى بالأصابع."),sel,stage);
+  return box;
+}
+
+
 /* ---------- Station 2 shell ---------- */
 function tabset(tabs,prefix){
   const bar=h("div",{class:"tabs",role:"tablist"}),panels=[];
@@ -643,7 +687,7 @@ function tabset(tabs,prefix){
 }
 function buildS2(){
   $("#box2").append(...stationHead(2,"h2","حروف تقرّبنا","تعرّفي على حروف الأبجدية الإشارية، ثم جرّبي المطابقة وتهجئة اسمك."),
-    tabset([["حروف ليان",buildGallery],["طابقي الإشارة",buildMatch],["اسمي بالإشارة",buildNameSign]],"s2"));
+    tabset([["حروف ليان",buildGallery],["طابقي الإشارة",buildMatch],["اسمي بالإشارة",buildNameSign],["كلمات بالأصابع",buildWords]],"s2"));
 }
 
 /* ---------- Braille helpers ---------- */
@@ -853,10 +897,77 @@ function buildCert(){
   $("#boxCert").append(backBtn(),h("h2",{id:"hCert",class:"noprint"},"شهادة «صانعة تواصل واعٍ»"),
     h("div",{class:"nameline noprint"},h("label",{class:"sr",for:"certIn"},"اسمك"),inp,
       h("div",{class:"row",role:"group","aria-label":"طريقة كتابة الاسم"},mb),
+      h("button",{class:"btn gold",id:"certSave",type:"button",onclick:()=>saveCertImage(inp.value,mode)},"حفظ كصورة"),
       h("button",{class:"btn",id:"certPrint",onclick:()=>{document.body.classList.add("pc");setTimeout(()=>window.print(),50)}},"طباعة / حفظ PDF")),
     h("div",{class:"certbox"},img("cert","شهادة إنجاز مبادرة كلنا نقدر، مزينة بالأقحوان والخزامى"),nm),
     h("p",{class:"count noprint"},"الاسم اختياري، ويمكن كتابته عاديًا أو بالبرايل أو بلغة الإشارة. لا يُحفظ ولا يُرسل لأي جهة."));
   window.certRender=render;
+}
+
+function certWords(raw){
+  const txt=raw.normalize("NFC").replace(TASH,"").replace(TATW,"").replace(/[أإآٱ]/g,"ا").replace(/ة/g,"ه").replace(/ى/g,"ي").replace(/ئ/g,"ي");
+  return txt.split(/\s+/).filter(Boolean).map(w=>Array.from(w));
+}
+async function saveCertImage(raw,mode){
+  raw=(raw||"").trim();
+  const loadImg=src=>new Promise((res,rej)=>{const i=new Image();i.onload=()=>res(i);i.onerror=rej;i.src=src});
+  const base=await loadImg(A["cert"]);
+  const W=base.naturalWidth,H=base.naturalHeight,u=W/100;
+  const c=document.createElement("canvas");c.width=W;c.height=H;const x=c.getContext("2d");
+  x.drawImage(base,0,0,W,H);
+  const cy=H*0.518,maxW=W*0.72;
+  if(raw){
+    const words=certWords(raw);
+    if(mode==="text"){
+      try{await document.fonts.load("800 40px Cairo",raw)}catch(e){}
+      let fs=W*0.034;x.font="800 "+fs+"px Cairo,sans-serif";x.direction="rtl";x.textAlign="center";x.textBaseline="middle";x.fillStyle="#4a1d7c";
+      const t=words.map(w=>w.join("")).join(" ");
+      const m=x.measureText(t).width;if(m>maxW){fs*=maxW/m;x.font="800 "+fs+"px Cairo,sans-serif"}
+      x.fillText(t,W/2,cy);
+    }else{
+      const n=words.flat().length+words.length-1;
+      let sz=Math.min(5.4,66/Math.max(n,1))*u;
+      const items=[];
+      words.forEach((w,wi)=>{
+        const arr=mode==="braille"?w:w.slice().reverse(); // sign: first letter at right
+        items.push({w:arr,wi});
+      });
+      // build a flat visual left-to-right list; words ordered right-to-left
+      const vis=[];
+      items.slice().reverse().forEach((it,k)=>{
+        if(k)vis.push({gap:true});
+        const arr=mode==="braille"?it.w:it.w; // sign: already reversed so first letter ends up right
+        arr.forEach(ch=>vis.push({ch}));
+      });
+      const hs=sz*1.15,gap=sz*0.12;
+      const widthOf=v=>v.gap?sz*0.6:(mode==="sign"?sz:sz*0.9);
+      let total=vis.reduce((a,v)=>a+widthOf(v)+gap,0)-gap;
+      if(total>maxW){const f=maxW/total;sz*=f;}
+      const hs2=sz*1.15,gap2=sz*0.12;
+      const wOf=v=>v.gap?sz*0.6:(mode==="sign"?sz:sz*0.9);
+      total=vis.reduce((a,v)=>a+wOf(v)+gap2,0)-gap2;
+      let px=(W-total)/2;
+      x.fillStyle="#4a1d7c";x.textAlign="center";x.textBaseline="middle";
+      for(const v of vis){
+        const w=wOf(v);
+        if(!v.gap){
+          if(mode==="sign"&&HD[v.ch]){
+            const im=await loadImg(HD[v.ch]);const r=Math.min(w/im.naturalWidth,hs2/im.naturalHeight);
+            const dw=im.naturalWidth*r,dh=im.naturalHeight*r;x.drawImage(im,px+(w-dw)/2,cy-dh/2,dw,dh);
+          }else if(mode==="braille"&&LETN[v.ch]){
+            x.font=(sz*1.05)+"px 'Segoe UI Symbol','Noto Sans Symbols 2','Apple Braille',sans-serif";x.fillText(LETN[v.ch].uni,px+w/2,cy);
+          }else{x.font="700 "+(sz*0.8)+"px Cairo,sans-serif";x.fillText(v.ch,px+w/2,cy)}
+        }
+        px+=w+gap2;
+      }
+    }
+  }
+  const blob=await new Promise(r=>c.toBlob(r,"image/png"));
+  const file=new File([blob],"شهادة-كلنا-نقدر.png",{type:"image/png"});
+  if(navigator.canShare&&navigator.canShare({files:[file]})){
+    try{await navigator.share({files:[file],title:"شهادة كلنا نقدر"});return}catch(e){if(e&&e.name==="AbortError")return}
+  }
+  const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="شهادة-كلنا-نقدر.png";document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),4000);
 }
 function fillCert(){const i=$("#certIn");if(i&&!i.value&&sharedName){i.value=sharedName}if(window.certRender)window.certRender()}
 
