@@ -490,14 +490,12 @@ function buildS1(){
 /* ---------- Letters (station 2) ---------- */
 const LETN=Object.fromEntries(LET.map(l=>[l.ch,l]));
 function openLetter(i){
-  let idx=i,zoom=false;
+  let idx=i;
   const big=h("div",{class:"big"});const ttl=h("h3",{style:"text-align:center"});
-  const upd=()=>{big.textContent="";big.classList.toggle("zoom",zoom);big.append(img("let-"+LET[idx].n,"بطاقة إشارة الحرف "+LET[idx].ch));ttl.textContent="البطاقة "+ar(idx+1)+" من "+ar(28);
-    zb.textContent=zoom?"تصغير":"تكبير"; zb.setAttribute("aria-pressed",zoom)};
+  const upd=()=>{big.textContent="";big.append(img("let-"+LET[idx].n,"بطاقة إشارة الحرف "+LET[idx].ch));ttl.textContent="البطاقة "+ar(idx+1)+" من "+ar(28);};
   const prev=()=>{idx=(idx+27)%28;upd()},next=()=>{idx=(idx+1)%28;upd()};
-  const zb=h("button",{class:"btn alt",onclick:()=>{zoom=!zoom;upd()}});
   const content=[ttl,big,h("div",{class:"row",style:"justify-content:center;margin-top:10px"},
-    h("button",{class:"btn alt",onclick:prev,"aria-label":"الحرف السابق"},"السابق"),zb,
+    h("button",{class:"btn alt",onclick:prev,"aria-label":"الحرف السابق"},"السابق"),
     h("button",{class:"btn alt",onclick:next,"aria-label":"الحرف التالي"},"التالي"),
     h("button",{class:"btn","data-first":"",onclick:()=>closeModal()},"إغلاق"))];
   openModal("بطاقة حرف",content,{onKey:e=>{if(e.key==="ArrowRight"){prev();return true}if(e.key==="ArrowLeft"){next();return true}}});
