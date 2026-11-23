@@ -191,8 +191,14 @@ textarea.field{min-height:96px;width:100%;resize:vertical}
 .count{font-size:.85rem;color:var(--plum2)}
 
 /* certificate */
-.certbox{position:relative;width:min(1100px,100%);margin:0 auto;background:#fff;line-height:0;border:2px solid var(--lav2);border-radius:12px;overflow:hidden}
+.certbox{container-type:inline-size;position:relative;width:min(1100px,100%);margin:0 auto;background:#fff;line-height:0;border:2px solid var(--lav2);border-radius:12px;overflow:hidden}
 .certbox img{width:100%;height:auto}
+.certname .cw{display:inline-flex;gap:.6cqw;margin:0 1.2cqw;vertical-align:middle;direction:ltr;flex-wrap:nowrap}
+.certname.braille .cw{direction:ltr}
+.certname.sign .cw{direction:rtl}
+.certname .cs{display:block;line-height:0;border:.15cqw solid var(--lav2);border-radius:.6cqw;overflow:hidden}
+.certname .cs img{width:100%;height:auto;display:block}
+.certname .cb{font-weight:400;line-height:1.2}
 .certname{position:absolute;left:14%;right:14%;top:51.8%;transform:translateY(-50%);text-align:center;font-weight:800;font-size:clamp(16px,3.4vw,44px);line-height:1.5;overflow-wrap:anywhere;color:var(--plum)}
 
 /* toast */
@@ -816,12 +822,37 @@ function buildS5(){
 /* ---------- Certificate ---------- */
 function buildCert(){
   const nm=h("div",{class:"certname",id:"certName"});
+  let mode="text";
+  const inp=h("input",{class:"field",id:"certIn",type:"text",maxlength:"30",placeholder:"اكتبي اسمك (اختياري)","aria-label":"اسمك على الشهادة",value:sharedName});
+  const modes=[["text","كتابة عادية"],["braille","برايل"],["sign","لغة الإشارة"]];
+  const mb=modes.map(([k,t])=>h("button",{class:"btn alt",type:"button","aria-pressed":k===mode,onclick:()=>{mode=k;mb.forEach((x,i)=>x.setAttribute("aria-pressed",modes[i][0]===k));render()}},t));
+  function render(){
+    nm.textContent="";nm.className="certname"+(mode==="text"?"":" "+mode);
+    const raw=inp.value.trim();if(!raw)return;
+    if(mode==="text"){nm.textContent=raw;return}
+    const r=parseName(raw,mode,true);
+    const n=r.words.flat().length+r.words.length-1;
+    const sz=Math.min(5.4,66/Math.max(n,1));
+    r.words.forEach((w,wi)=>{
+      const wd=h("span",{class:"cw"});
+      w.forEach(x=>{
+        if(!x.ok){wd.append(h("span",{class:"cx",style:"font-size:"+(sz*.8)+"cqw"},x.ch));return}
+        if(mode==="sign")wd.append(h("span",{class:"cs",style:"width:"+sz+"cqw"},img("let-"+x.l.n,"")));
+        else wd.append(h("span",{class:"cb",style:"font-size:"+(sz*1.05)+"cqw"},x.l.uni));
+      });
+      nm.append(wd);
+    });
+  }
+  inp.addEventListener("input",render);
   $("#boxCert").append(backBtn(),h("h2",{id:"hCert",class:"noprint"},"شهادة «صانعة تواصل واعٍ»"),
-    h("div",{class:"nameline noprint"},h("button",{class:"btn",id:"certPrint",onclick:()=>{document.body.classList.add("pc");setTimeout(()=>window.print(),50)}},"طباعة / حفظ PDF")),
+    h("div",{class:"nameline noprint"},h("label",{class:"sr",for:"certIn"},"اسمك"),inp,
+      h("div",{class:"row",role:"group","aria-label":"طريقة كتابة الاسم"},mb),
+      h("button",{class:"btn",id:"certPrint",onclick:()=>{document.body.classList.add("pc");setTimeout(()=>window.print(),50)}},"طباعة / حفظ PDF")),
     h("div",{class:"certbox"},img("cert","شهادة إنجاز مبادرة كلنا نقدر، مزينة بالأقحوان والخزامى"),nm),
-    h("p",{class:"count noprint"},"لا يُحفظ أي اسم ولا يُرسل لأي جهة."));
+    h("p",{class:"count noprint"},"الاسم اختياري، ويمكن كتابته عاديًا أو بالبرايل أو بلغة الإشارة. لا يُحفظ ولا يُرسل لأي جهة."));
+  window.certRender=render;
 }
-function fillCert(){const n=$("#certName");if(n)n.textContent=sharedName||""}
+function fillCert(){const i=$("#certIn");if(i&&!i.value&&sharedName){i.value=sharedName}if(window.certRender)window.certRender()}
 
 /* ---------- settings ---------- */
 function openSettings(){
