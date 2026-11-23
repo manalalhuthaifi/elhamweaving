@@ -343,7 +343,7 @@ function award(key){if(S.awarded[key])return false;S.awarded[key]=1;save();retur
 function completed(){return S.done.filter(Boolean).length}
 function markDone(i,phrase){
   const first=!S.done[i];S.done[i]=true;save();updateProgress();
-  if(first){toast(phrase)}
+  if(first){toast(phrase);if(completed()===5)setTimeout(()=>go("sCert"),2200)}
 }
 function updateProgress(){
   $("#prog").textContent="زهور رحلتك: "+ar(completed())+" من "+ar(5);
@@ -816,14 +816,12 @@ function buildS5(){
 /* ---------- Certificate ---------- */
 function buildCert(){
   const nm=h("div",{class:"certname",id:"certName"});
-  const inp=h("input",{class:"field",id:"certIn",type:"text",maxlength:"45",placeholder:"اكتبي اسمك (اختياري)","aria-label":"اسمك على الشهادة"});
-  inp.addEventListener("input",()=>{nm.textContent=inp.value});
   $("#boxCert").append(backBtn(),h("h2",{id:"hCert",class:"noprint"},"شهادة «صانعة تواصل واعٍ»"),
-    h("div",{class:"nameline noprint"},h("label",{class:"sr",for:"certIn"},"اسمك"),inp,h("button",{class:"btn",id:"certPrint",onclick:()=>{document.body.classList.add("pc");setTimeout(()=>window.print(),50)}},"طباعة / حفظ PDF")),
+    h("div",{class:"nameline noprint"},h("button",{class:"btn",id:"certPrint",onclick:()=>{document.body.classList.add("pc");setTimeout(()=>window.print(),50)}},"طباعة / حفظ PDF")),
     h("div",{class:"certbox"},img("cert","شهادة إنجاز مبادرة كلنا نقدر، مزينة بالأقحوان والخزامى"),nm),
-    h("p",{class:"count noprint"},"لا يُحفظ الاسم ولا يُرسل لأي جهة."));
+    h("p",{class:"count noprint"},"لا يُحفظ أي اسم ولا يُرسل لأي جهة."));
 }
-function fillCert(){}
+function fillCert(){const n=$("#certName");if(n)n.textContent=sharedName||""}
 
 /* ---------- settings ---------- */
 function openSettings(){
