@@ -391,13 +391,13 @@ let timers=[];function stopAllTimers(){timers.forEach(clearTimeout);timers=[];if
 const EXP={neutral:"01-neutral",happy:"02-happy",laughing:"03-laughing",confident:"04-confident",curious:"05-curious",surprised:"06-surprised",shocked:"07-shocked",thoughtful:"08-thoughtful",concerned:"09-concerned",sad:"10-sad",proud:"11-proud",closed:"12-eyes-closed"};
 const MOUTH_SEQ=["03-slight-open","04-open-a","02-closed-mbp","05-open-e","03-slight-open","07-round-o","06-wide-i","02-closed-mbp","03-slight-open","01-rest"];
 function makeAvatar(exp){
-  // وجه ثابت: لا تتغير التعابير ولا يتحرك الفم
-  const i=h("img",{src:A["exp-"+EXP.neutral],alt:"ليان",draggable:"false"});
+  // تعابير ثابتة بلا حركة فم؛ تحزن عند الإجابة الخاطئة
+  const i=h("img",{src:A["exp-"+EXP[exp||"neutral"]],alt:"ليان",draggable:"false"});
   const box=h("div",{class:"avatar"},i);
-  box.set=()=>{};
+  box.set=e=>{if(EXP[e]){i.src=A["exp-"+EXP[e]];i.alt=expAlt(e)}};
   return box;
 }
-function expAlt(e){return {neutral:"ليان بتعبير هادئ",happy:"ليان مبتسمة",curious:"ليان بتعبير فضولي",thoughtful:"ليان تفكر",concerned:"ليان بتعبير قلق لطيف",proud:"ليان فخورة",confident:"ليان واثقة",laughing:"ليان تضحك"}[e]||"ليان"}
+function expAlt(e){return {neutral:"ليان بتعبير هادئ",happy:"ليان مبتسمة",curious:"ليان بتعبير فضولي",thoughtful:"ليان تفكر",concerned:"ليان بتعبير قلق لطيف",sad:"ليان حزينة قليلًا",proud:"ليان فخورة",confident:"ليان واثقة",laughing:"ليان تضحك"}[e]||"ليان"}
 
 /* ---------- map ---------- */
 const ST=[
@@ -483,7 +483,7 @@ function buildS1(){
       s.o.forEach(o=>{const c=h("button",{class:"choice"},o[0]);
         c.onclick=()=>{
           if(o[1]){c.classList.add("ok");[...ch.children].forEach(x=>x.disabled=true);fb.textContent="";fb.append(h("div",{class:"fb ok",role:"status"},o[2]));av.set("happy",true);nxt.hidden=false;nxt.focus()}
-          else{c.classList.add("no");c.disabled=true;fb.textContent="";fb.append(h("div",{class:"fb no",role:"status"},o[2]+" حاولي مرة أخرى."));av.set("concerned",false)}
+          else{c.classList.add("no");c.disabled=true;fb.textContent="";fb.append(h("div",{class:"fb no",role:"status"},o[2]+" حاولي مرة أخرى."));av.set("sad",false)}
         };ch.append(c)});
     }else{
       nxt.hidden=step===S1.length-1;
