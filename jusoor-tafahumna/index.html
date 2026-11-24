@@ -244,6 +244,7 @@ textarea.field{min-height:96px;width:100%;resize:vertical}
 .certname .cw{display:inline-flex;gap:.6cqw;margin:0 1.2cqw;vertical-align:middle;direction:ltr;flex-wrap:nowrap}
 .certname.braille .cw{direction:ltr}
 .certname.sign .cw{direction:rtl}
+.certname.sign,.certname.braille{white-space:nowrap;overflow-wrap:normal}
 .certname .cs{display:flex;align-items:center;justify-content:center;line-height:0}
 .certname .cs img{width:100%;height:100%;object-fit:contain;display:block}
 .certname .cb{font-weight:400;line-height:1.2}
@@ -1379,7 +1380,8 @@ function buildCert(){
     const txt=raw.normalize("NFC").replace(TASH,"").replace(TATW,"").replace(/[أإآٱ]/g,"ا").replace(/ة/g,"ه").replace(/ى/g,"ي").replace(/ئ/g,"ي");
     const words=txt.split(/\s+/).filter(Boolean).map(w=>Array.from(w));
     const n=words.flat().length+words.length-1;
-    const sz=Math.min(5.4,66/Math.max(n,1));
+    const nch=words.flat().length;
+    const sz=Math.max(1.8,Math.min(5.4,(73-words.length*2)/Math.max(nch,1)-.6));
     words.forEach(w=>{
       const wd=h("span",{class:"cw"});
       w.forEach(ch=>{
