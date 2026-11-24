@@ -220,7 +220,7 @@ button.bd{min-width:48px;min-height:48px}
 .bigletter{font-size:3.2rem;font-weight:800;line-height:1.2}
 .split{display:grid;gap:14px;grid-template-columns:1fr;align-items:center;justify-items:center}
 @media(min-width:700px){.split{grid-template-columns:1fr 1fr}}
-.pickrow{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;max-width:560px}
+.pickrow{display:grid;grid-template-columns:repeat(auto-fill,minmax(44px,1fr));gap:6px;max-width:560px}
 .pickrow .tab{padding:0;font-size:1.3rem;min-width:44px;border-radius:12px}
 .bcard{width:clamp(110px,28vw,150px)}
 .bcard img{width:100%;aspect-ratio:720/900;object-fit:contain;border-radius:10px;border:2px solid var(--lav2)}
