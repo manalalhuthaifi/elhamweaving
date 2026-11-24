@@ -60,6 +60,7 @@ p{margin:.3em 0 .8em}
 input[type=checkbox]{width:44px;height:44px;accent-color:var(--plum);margin:0}
 label.row{min-height:44px}
 .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.row>.nextbtn{margin-inline-start:auto}
 .card{background:var(--paper);border:2px solid var(--lav2);border-radius:var(--r);padding:16px;box-shadow:var(--shadow)}
 
 /* screens */
@@ -541,7 +542,7 @@ const S1=[
 function buildS1(){
   const b=$("#box1");let step=0;
   const av=makeAvatar("happy");const bub=h("div",{class:"bubble",id:"s1bub","aria-live":"polite"});
-  const ch=h("div",{class:"choices"});const fb=h("div");const nxt=h("button",{class:"btn",id:"s1next"},"تابعي");
+  const ch=h("div",{class:"choices"});const fb=h("div");const nxt=h("button",{class:"btn nextbtn",id:"s1next"},"تابعي");
   const dots=h("div",{class:"dots","aria-hidden":"true"},S1.map(()=>h("i")));
   const status=h("p",{class:"count",id:"s1stat"});
   function render(){
@@ -880,7 +881,7 @@ function buildS4(){
         h("div",{class:"row"},h("button",{class:"btn",onclick:()=>{cur=0;correct=SC.map(()=>false);draw()}},"إعادة المواقف"),h("button",{class:"btn alt",onclick:()=>go("sMap")},"العودة إلى الخريطة")));
       return;
     }
-    const q=SC[cur];let first=true;const fb=h("div",{"aria-live":"polite"});const nx=h("button",{class:"btn",hidden:true},cur===4?"إنهاء":"الموقف التالي");
+    const q=SC[cur];let first=true;const fb=h("div",{"aria-live":"polite"});const nx=h("button",{class:"btn nextbtn",hidden:true},cur===4?"إنهاء":"الموقف التالي");
     nx.onclick=()=>{cur++;draw()};
     body.append(h("h3",null,"الموقف "+ar(cur+1)+" من "+ar(5)),h("div",{class:"bubble"},q.s),h("p",null,"ماذا تفعلين؟"),
       h("div",{class:"choices"},q.o.map(o=>{
