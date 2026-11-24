@@ -605,7 +605,7 @@ function buildMatch(){
     }
     const q=qs[qi];
     const opts=shuffle([q,...shuffle(LET.filter(l=>l!==q)).slice(0,3)]);
-    let first=true;const fb=h("div",{"aria-live":"polite"});const nx=h("button",{class:"btn",hidden:true},qi===4?"إنهاء":"السؤال التالي");
+    let first=true;const fb=h("div",{"aria-live":"polite"});const nx=h("button",{class:"btn nextbtn",hidden:true},qi===4?"إنهاء":"السؤال التالي");
     nx.onclick=()=>{qi++;draw()};
     box.append(h("h3",null,"السؤال "+ar(qi+1)+" من "+ar(5)),
       h("p",null,"أي حرف تُشير إليه ليان؟ (البطاقة تُظهر اليد والشخصية فقط)"),
