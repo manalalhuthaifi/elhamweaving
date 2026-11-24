@@ -568,8 +568,7 @@ function buildS1(){
   }
   nxt.onclick=()=>{if(step<S1.length-1){step++;render()}};
   b.append(...stationHead(1,"h1","نتعرف ونتفهّم","حوار قصير مع ليان عن لطف التواصل. لا توجد إجابات مخيفة، فكل محاولة تعلّمنا شيئًا."),
-    h("div",{class:"dlg"},av,h("div",null,bub,ch,fb,h("div",{class:"row"},nxt),dots,status)),
-    h("div",{class:"card",style:"margin-top:12px"},h("label",{class:"row"},h("input",{type:"checkbox",id:"mouthChk",checked:S.prefs.mouth,onchange:e=>{S.prefs.mouth=e.target.checked;save();render()}}),"تجربة حركة الفم (تقريبية، اختيارية)")));
+    h("div",{class:"dlg"},av,h("div",null,bub,ch,fb,h("div",{class:"row"},nxt),dots,status)));
   render();
 }
 
