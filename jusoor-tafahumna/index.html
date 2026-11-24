@@ -90,7 +90,6 @@ html.calm .screen.enter, html.calm .rise{animation:none!important}
 .flower.on img{filter:none;transform:scale(1.12)}
 .flower span{position:absolute;bottom:-4px;inset-inline:0;font-size:.72rem;font-weight:700}
 .stations{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin:0;padding:0;list-style:none}
-.stations li:last-child{grid-column:1/-1}
 .st{width:100%;height:100%;text-align:center;background:var(--paper);border:2px solid var(--lav2);border-radius:var(--r);padding:12px 8px 14px;box-shadow:var(--shadow);display:flex;flex-direction:column;align-items:center;gap:4px;position:relative;transition:transform .15s,border-color .15s}
 .st:hover{transform:translateY(-2px);border-color:var(--lav3)}
 .st .ic{width:84px;height:84px}
@@ -332,6 +331,7 @@ footer small{display:block;margin-top:4px}
   <section class="screen" id="s2" aria-labelledby="h2" hidden><div class="wrap" id="box2"></div></section>
   <section class="screen" id="s3" aria-labelledby="h3" hidden><div class="wrap" id="box3"></div></section>
   <section class="screen" id="s4" aria-labelledby="h4" hidden><div class="wrap" id="box4"></div></section>
+  <section class="screen" id="s6" aria-labelledby="h6" hidden><div class="wrap" id="box6"></div></section>
   <section class="screen" id="s5" aria-labelledby="h5" hidden><div class="wrap" id="box5"></div></section>
   <section class="screen" id="sCert" aria-labelledby="hCert" hidden><div class="wrap" id="boxCert"></div></section>
 </main>
@@ -438,7 +438,7 @@ function updateProgress(){
 }
 
 /* ---------- router ---------- */
-const SCREENS=["sIntro","sMap","s1","s2","s3","s4","s5","sCert"];
+const SCREENS=["sIntro","sMap","s1","s2","s3","s4","s5","s6","sCert"];
 function go(id){if(location.hash!=="#"+id)location.hash=id;else route()}
 function route(){
   let id=(location.hash||"").slice(1);
@@ -474,12 +474,13 @@ const ST=[
  {t:"حروف تقرّبنا",d:"الإشارة والاسم",p:"prop-03-book"},
  {t:"نقاط تفتح عالمًا",d:"برايل",p:"prop-04-puzzle"},
  {t:"كيف أساند؟",d:"مواقف وبطاقات تفاعلية",p:"prop-05-heart-bubbles"},
- {t:"أثري الجميل",d:"رسالة وشهادة",p:"prop-07-envelope"}
+ {t:"أثري الجميل",d:"رسالة وشهادة",p:"prop-07-envelope"},
+ {t:"تواصل معهم",d:"اكتبي رسالة وتهجّي كلمة",p:"prop-10-butterfly",extra:true}
 ];
 let flowerEls=[],stBtns=[];
 function buildMap(){
   const b=$("#mapBox");b.textContent="";
-  flowerEls=ST.map((s,i)=>h("div",{class:"flower",role:"img","aria-label":"زهرة المحطة "+ar(i+1)+": "},img("prop-09-daisy"),h("span",null,ar(i+1))));
+  flowerEls=ST.filter(x=>!x.extra).map((s,i)=>h("div",{class:"flower",role:"img","aria-label":"زهرة المحطة "+ar(i+1)+": "},img("prop-09-daisy"),h("span",null,ar(i+1))));
   b.append(
     h("h2",{id:"hMap"},"خريطة الرحلة"),
     h("p",null,"اختاري أي محطة. يمكنكِ الرجوع إلى أي محتوى في أي وقت، وكل محطة تُضيء زهرة على الجسر."),
@@ -494,6 +495,7 @@ function buildMap(){
 function renderMapState(){
   if(!stBtns.length)return;
   ST.forEach((s,i)=>{
+    if(s.extra){$(".tag",stBtns[i]).textContent="تجربة إضافية";stBtns[i].setAttribute("aria-label","المحطة "+ar(i+1)+": "+s.t+"، تجربة إضافية");return}
     const d=S.done[i];
     stBtns[i].classList.toggle("done",d);
     $(".tag",stBtns[i]).textContent=d?"منجزة":"مفتوحة";
@@ -752,7 +754,10 @@ function tabset(tabs,prefix){
 }
 function buildS2(){
   $("#box2").append(...stationHead(2,"h2","حروف تقرّبنا","تعرّفي على حروف الأبجدية الإشارية، ثم جرّبي المطابقة وتهجئة اسمك."),
-    tabset([["حروف ليان",buildGallery],["طابقي الإشارة",buildMatch],["اسمي بالإشارة",buildNameSign],["كلمات بالأصابع",buildWords],["✋ تواصل معهم",buildContact]],"s2"));
+    tabset([["حروف ليان",buildGallery],["طابقي الإشارة",buildMatch],["اسمي بالإشارة",buildNameSign],["كلمات بالأصابع",buildWords]],"s2"));
+}
+function buildS6(){
+  $("#box6").append(...stationHead(6,"h6","تواصل معهم","اكتبي رسالة قصيرة أو كلمة، وشاهدي كيف تُنقل بطرق تواصل مختلفة. هذه تجربة إضافية ولا تُشترط لفتح الشهادة."),buildContact());
 }
 
 /* ---------- Braille helpers ---------- */
@@ -1479,7 +1484,7 @@ $("#setBtn").onclick=openSettings;
 
 /* ---------- init ---------- */
 
-buildIntro();buildMap();buildS1();buildS2();buildS3();buildS4();buildS5();buildCert();
+buildIntro();buildMap();buildS1();buildS2();buildS3();buildS4();buildS5();buildS6();buildCert();
 updateProgress();
 route();
 window.__K={S,go,parseName,LET};
