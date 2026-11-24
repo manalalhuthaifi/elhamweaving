@@ -106,7 +106,8 @@ html.calm .screen.enter, html.calm .rise{animation:none!important}
 .certcta{margin-top:16px;text-align:center}
 
 /* tabs */
-.tabs{display:flex;gap:6px;flex-wrap:wrap;margin:6px 0 14px}
+.tabs{display:grid;grid-template-columns:repeat(auto-fit,minmax(138px,1fr));gap:8px;margin:6px 0 14px}
+.tabs .tab{display:flex;align-items:center;justify-content:center;text-align:center;line-height:1.25;padding:6px 12px}
 .tab{min-height:44px;padding:4px 16px;border-radius:999px;border:2px solid var(--lav3);background:#fff;font-weight:700}
 .tab[aria-selected=true]{background:var(--plum);color:#fff;border-color:var(--plum)}
 
